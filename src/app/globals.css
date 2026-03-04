@@ -1,26 +1,95 @@
 @import "tailwindcss";
 
+/* ── Milwaukee Civic Color Palette ── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0;
+  --background: #FDF6EC;
+  --foreground: #1A1A2E;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A2E;
+  --primary: #0A3161;
+  --primary-hover: #0D3D7A;
+  --primary-foreground: #FFFFFF;
+  --secondary: #D4A574;
+  --secondary-hover: #C4956A;
+  --secondary-foreground: #1A1A2E;
+  --muted: #E8DDD0;
+  --muted-foreground: #5A5A6E;
+  --accent: #2E8B57;
+  --accent-foreground: #FFFFFF;
+  --destructive: #C41E3A;
+  --destructive-foreground: #FFFFFF;
+  --border: #1A1A2E;
 }
 
+.dark {
+  --radius: 0;
+  --background: #1A1A2E;
+  --foreground: #FDF6EC;
+  --card: #242440;
+  --card-foreground: #FDF6EC;
+  --primary: #3B6FA0;
+  --primary-hover: #4A80B2;
+  --primary-foreground: #FFFFFF;
+  --secondary: #D4A574;
+  --secondary-hover: #C4956A;
+  --secondary-foreground: #1A1A2E;
+  --muted: #2E2E4A;
+  --muted-foreground: #A0A0B0;
+  --accent: #3DAF6E;
+  --accent-foreground: #FFFFFF;
+  --destructive: #E63946;
+  --destructive-foreground: #FFFFFF;
+  --border: #3A3A5A;
+}
+
+/* ── RetroUI Tailwind v4 Theme ── */
 @theme inline {
+  --font-head: var(--font-archivo-black);
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-geist-mono);
+
+  --radius: var(--radius);
+
+  /* Neobrutalist shadows using border color */
+  --shadow-xs: 1px 1px 0 0 var(--border);
+  --shadow-sm: 2px 2px 0 0 var(--border);
+  --shadow: 3px 3px 0 0 var(--border);
+  --shadow-md: 4px 4px 0 0 var(--border);
+  --shadow-lg: 6px 6px 0 0 var(--border);
+  --shadow-xl: 10px 10px 0 1px var(--border);
+  --shadow-2xl: 16px 16px 0 1px var(--border);
+
+  /* Map CSS variables to Tailwind colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Milwaukee named colors for direct use: bg-mke-blue, text-mke-dark, etc. */
+  --color-mke-blue: #0A3161;
+  --color-mke-brick: #D4A574;
+  --color-mke-green: #2E8B57;
+  --color-mke-cream: #FDF6EC;
+  --color-mke-dark: #1A1A2E;
+  --color-mke-danger: #C41E3A;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
