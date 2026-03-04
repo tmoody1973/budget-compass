@@ -4,6 +4,7 @@ import { qaAgent } from "./qa-agent";
 import { analystAgent } from "./analyst-agent";
 import { simulatorAgent } from "./simulator-agent";
 import { visualAgent } from "./visual-agent";
+import { voiceAgent } from "./voice-agent";
 
 const bedrock = createAmazonBedrock({ region: "us-east-1" });
 
@@ -25,6 +26,9 @@ ROUTING RULES:
 - Visual requests, infographic generation, "show me", "visualize", charts, images → delegate to visualAgent
   Examples: "Show me where my tax dollars go" "Visualize department spending" "Create a budget infographic"
 
+- Briefing, listen, audio, "tell me about", "hear", spoken summary → delegate to voiceAgent
+  Examples: "Give me a briefing on police budget" "Brief me on property taxes" "Audio summary of capital improvements"
+
 - Greetings or off-topic → respond directly with a friendly redirect to budget topics
 
 Always route. Be fast. Don't add commentary before routing.`,
@@ -34,5 +38,6 @@ Always route. Be fast. Don't add commentary before routing.`,
     analystAgent,
     simulatorAgent,
     visualAgent,
+    voiceAgent,
   },
 });
