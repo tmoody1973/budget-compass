@@ -3,12 +3,14 @@ import { registerCopilotKit } from "@ag-ui/mastra/copilotkit";
 import { queryRouter } from "./agents/query-router";
 import { qaAgent } from "./agents/qa-agent";
 import { analystAgent } from "./agents/analyst-agent";
+import { simulatorAgent } from "./agents/simulator-agent";
 
 export const mastra = new Mastra({
   agents: {
     queryRouter,
     qaAgent,
     analystAgent,
+    simulatorAgent,
   },
   server: {
     cors: {

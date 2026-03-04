@@ -2,6 +2,7 @@ import { Agent } from "@mastra/core/agent";
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { qaAgent } from "./qa-agent";
 import { analystAgent } from "./analyst-agent";
+import { simulatorAgent } from "./simulator-agent";
 
 const bedrock = createAmazonBedrock({ region: "us-east-1" });
 
@@ -17,6 +18,9 @@ ROUTING RULES:
 - Complex analysis (comparisons, trends, multi-department, rankings, explanations) → delegate to analystAgent
   Examples: "Compare police and fire budgets" "How has library funding changed?" "Which departments grew the most?"
 
+- Budget simulation, "what if" scenarios, reallocation, tradeoffs → delegate to simulatorAgent
+  Examples: "What if we cut police by 10%?" "Reallocate $5M from X to Y" "What are the tradeoffs?"
+
 - Greetings or off-topic → respond directly with a friendly redirect to budget topics
 
 Always route. Be fast. Don't add commentary before routing.`,
@@ -24,5 +28,6 @@ Always route. Be fast. Don't add commentary before routing.`,
   agents: {
     qaAgent,
     analystAgent,
+    simulatorAgent,
   },
 });
