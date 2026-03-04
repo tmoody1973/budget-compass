@@ -9,6 +9,11 @@ const AskMode = dynamic(
   { ssr: false },
 );
 
+const RemixMode = dynamic(
+  () => import("@/components/modes/remix-mode").then((m) => ({ default: m.RemixMode })),
+  { ssr: false },
+);
+
 const MODES = [
   { id: "ask", label: "Ask", emoji: "\ud83d\udcac" },
   { id: "remix", label: "Remix", emoji: "\ud83c\udf9b\ufe0f" },
@@ -53,15 +58,7 @@ export default function Home() {
       {/* Mode content */}
       <div className="mx-auto h-[calc(100vh-64px)] max-w-6xl p-6">
         {activeMode === "ask" && <AskMode />}
-        {activeMode === "remix" && (
-          <div className="flex h-full items-center justify-center">
-            <div className="rounded-lg border-2 border-mke-dark bg-white p-8 text-center shadow-[4px_4px_0px_0px_#1A1A2E]">
-              <p className="mb-2 text-2xl">{"\ud83c\udf9b\ufe0f"}</p>
-              <p className="font-bold text-mke-dark">Remix Mode</p>
-              <p className="text-sm text-gray-500">Coming soon...</p>
-            </div>
-          </div>
-        )}
+        {activeMode === "remix" && <RemixMode />}
         {activeMode === "see" && (
           <div className="flex h-full items-center justify-center">
             <div className="rounded-lg border-2 border-mke-dark bg-white p-8 text-center shadow-[4px_4px_0px_0px_#1A1A2E]">
