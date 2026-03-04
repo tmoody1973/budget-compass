@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { UserButton } from "@clerk/nextjs";
 
 const AskMode = dynamic(
   () => import("@/components/modes/ask-mode").then((m) => m.AskMode),
@@ -28,21 +29,24 @@ export default function Home() {
           <h1 className="font-head text-2xl font-bold text-mke-blue">
             MKE Budget Compass
           </h1>
-          <nav className="flex gap-2">
-            {MODES.map((mode) => (
-              <button
-                key={mode.id}
-                onClick={() => setActiveMode(mode.id)}
-                className={`rounded-lg border-2 border-mke-dark px-4 py-2 text-sm font-bold transition-all ${
-                  activeMode === mode.id
-                    ? "bg-mke-blue text-white shadow-[2px_2px_0px_0px_#1A1A2E]"
-                    : "bg-white text-mke-dark shadow-[3px_3px_0px_0px_#1A1A2E] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-mke-cream hover:shadow-[1px_1px_0px_0px_#1A1A2E]"
-                }`}
-              >
-                {mode.emoji} {mode.label}
-              </button>
-            ))}
-          </nav>
+          <div className="flex items-center gap-4">
+            <nav className="flex gap-2">
+              {MODES.map((mode) => (
+                <button
+                  key={mode.id}
+                  onClick={() => setActiveMode(mode.id)}
+                  className={`rounded-lg border-2 border-mke-dark px-4 py-2 text-sm font-bold transition-all ${
+                    activeMode === mode.id
+                      ? "bg-mke-blue text-white shadow-[2px_2px_0px_0px_#1A1A2E]"
+                      : "bg-white text-mke-dark shadow-[3px_3px_0px_0px_#1A1A2E] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-mke-cream hover:shadow-[1px_1px_0px_0px_#1A1A2E]"
+                  }`}
+                >
+                  {mode.emoji} {mode.label}
+                </button>
+              ))}
+            </nav>
+            <UserButton />
+          </div>
         </div>
       </header>
 
