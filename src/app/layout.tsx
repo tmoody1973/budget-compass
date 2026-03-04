@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo_Black, Space_Grotesk, Geist_Mono } from "next/font/google";
+import { Providers } from "./providers";
 import "./globals.css";
 
 const archivoBlack = Archivo_Black({
@@ -22,9 +23,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Budget Compass - Milwaukee Budget Explorer",
+  title: "MKE Budget Compass",
   description:
-    "Explore Milwaukee's city budget through AI-powered conversations, simulations, and visualizations.",
+    "AI-powered civic intelligence for Milwaukee's $1.4B budget",
 };
 
 export default function RootLayout({
@@ -37,7 +38,7 @@ export default function RootLayout({
       <body
         className={`${archivoBlack.variable} ${spaceGrotesk.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

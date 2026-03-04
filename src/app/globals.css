@@ -93,3 +93,78 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* ── CopilotKit Theme Overrides (Milwaukee Neobrutalist) ── */
+.copilot-chat-mke {
+  --copilot-kit-primary-color: #0A3161;
+  --copilot-kit-contrast-color: #FFFFFF;
+  --copilot-kit-secondary-color: #FDF6EC;
+  --copilot-kit-secondary-contrast-color: #1A1A2E;
+  --copilot-kit-background-color: #FFFFFF;
+  --copilot-kit-muted-color: #E8DDD0;
+  --copilot-kit-border-color: #1A1A2E;
+  --copilot-kit-separator-color: #E8DDD0;
+  --copilot-kit-response-button-background-color: #FFFFFF;
+  --copilot-kit-response-button-color: #0A3161;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Chat window neobrutalist card */
+.copilot-chat-mke .copilotKitWindow {
+  border: 2px solid #1A1A2E;
+  border-radius: 0.5rem;
+  box-shadow: 4px 4px 0px 0px #1A1A2E;
+}
+
+/* Messages area */
+.copilot-chat-mke .copilotKitMessages {
+  background-color: #FDF6EC;
+}
+
+/* User message bubble */
+.copilot-chat-mke .copilotKitUserMessage {
+  background-color: #0A3161;
+  color: #FFFFFF;
+  border-radius: 0.5rem;
+  border: 2px solid #1A1A2E;
+}
+
+/* Assistant message bubble */
+.copilot-chat-mke .copilotKitAssistantMessage {
+  background-color: #FFFFFF;
+  color: #1A1A2E;
+  border-radius: 0.5rem;
+  border: 2px solid #1A1A2E;
+  box-shadow: 2px 2px 0px 0px #1A1A2E;
+}
+
+/* Input area */
+.copilot-chat-mke .copilotKitInput {
+  border: 2px solid #1A1A2E;
+  border-radius: 0.5rem;
+  box-shadow: 2px 2px 0px 0px #1A1A2E;
+}
+
+.copilot-chat-mke .copilotKitInput textarea {
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Send button */
+.copilot-chat-mke .copilotKitButton {
+  background-color: #0A3161;
+  color: #FFFFFF;
+  border: 2px solid #1A1A2E;
+  border-radius: 0.375rem;
+}
+
+.copilot-chat-mke .copilotKitButton:hover {
+  background-color: #0D3D7A;
+}
+
+/* Header */
+.copilot-chat-mke .copilotKitHeader {
+  background-color: #0A3161;
+  color: #FFFFFF;
+  border-bottom: 2px solid #1A1A2E;
+  font-family: var(--font-head), Arial, Helvetica, sans-serif;
+}
