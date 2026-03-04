@@ -14,6 +14,11 @@ const RemixMode = dynamic(
   { ssr: false },
 );
 
+const SeeMode = dynamic(
+  () => import("@/components/modes/see-mode").then((m) => ({ default: m.SeeMode })),
+  { ssr: false },
+);
+
 const MODES = [
   { id: "ask", label: "Ask", emoji: "\ud83d\udcac" },
   { id: "remix", label: "Remix", emoji: "\ud83c\udf9b\ufe0f" },
@@ -59,15 +64,7 @@ export default function Home() {
       <div className="mx-auto h-[calc(100vh-64px)] max-w-6xl p-6">
         {activeMode === "ask" && <AskMode />}
         {activeMode === "remix" && <RemixMode />}
-        {activeMode === "see" && (
-          <div className="flex h-full items-center justify-center">
-            <div className="rounded-lg border-2 border-mke-dark bg-white p-8 text-center shadow-[4px_4px_0px_0px_#1A1A2E]">
-              <p className="mb-2 text-2xl">{"\ud83c\udfa8"}</p>
-              <p className="font-bold text-mke-dark">See Mode</p>
-              <p className="text-sm text-gray-500">Coming soon...</p>
-            </div>
-          </div>
-        )}
+        {activeMode === "see" && <SeeMode />}
         {activeMode === "hear" && (
           <div className="flex h-full items-center justify-center">
             <div className="rounded-lg border-2 border-mke-dark bg-white p-8 text-center shadow-[4px_4px_0px_0px_#1A1A2E]">

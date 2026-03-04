@@ -4,6 +4,7 @@ import { queryRouter } from "./agents/query-router";
 import { qaAgent } from "./agents/qa-agent";
 import { analystAgent } from "./agents/analyst-agent";
 import { simulatorAgent } from "./agents/simulator-agent";
+import { visualAgent } from "./agents/visual-agent";
 
 export const mastra = new Mastra({
   agents: {
@@ -11,6 +12,7 @@ export const mastra = new Mastra({
     qaAgent,
     analystAgent,
     simulatorAgent,
+    visualAgent,
   },
   server: {
     cors: {

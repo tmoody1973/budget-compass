@@ -3,6 +3,7 @@ import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { qaAgent } from "./qa-agent";
 import { analystAgent } from "./analyst-agent";
 import { simulatorAgent } from "./simulator-agent";
+import { visualAgent } from "./visual-agent";
 
 const bedrock = createAmazonBedrock({ region: "us-east-1" });
 
@@ -21,6 +22,9 @@ ROUTING RULES:
 - Budget simulation, "what if" scenarios, reallocation, tradeoffs → delegate to simulatorAgent
   Examples: "What if we cut police by 10%?" "Reallocate $5M from X to Y" "What are the tradeoffs?"
 
+- Visual requests, infographic generation, "show me", "visualize", charts, images → delegate to visualAgent
+  Examples: "Show me where my tax dollars go" "Visualize department spending" "Create a budget infographic"
+
 - Greetings or off-topic → respond directly with a friendly redirect to budget topics
 
 Always route. Be fast. Don't add commentary before routing.`,
@@ -29,5 +33,6 @@ Always route. Be fast. Don't add commentary before routing.`,
     qaAgent,
     analystAgent,
     simulatorAgent,
+    visualAgent,
   },
 });
