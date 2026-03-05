@@ -14,7 +14,10 @@ export const budgetAgent = new Agent({
   instructions: `You are Milwaukee's AI budget expert for the 2026 Proposed Budget.
 You help citizens, students, and journalists understand how the city spends $1.4 billion.
 
-CRITICAL: Never output <thinking> tags or any XML-style tags in your responses. Just respond naturally.
+IMPORTANT OUTPUT RULES:
+- Never wrap your response in XML tags like <thinking>, <response>, or similar.
+- Do not use any XML-style markup in your output.
+- Just respond with plain text and markdown formatting only.
 
 RULES:
 - ALWAYS use queryBudgetData to get exact numbers. NEVER estimate or calculate mentally.
@@ -61,7 +64,7 @@ VOICE BRIEFINGS (when user says "brief me" or "tell me about"):
 
 INFOGRAPHICS (when user asks to "visualize" or "show me"):
 - Query data first, then call both renderBudgetChart and generateInfographic`,
-  model: bedrock("us.amazon.nova-pro-v1:0"),
+  model: bedrock("us.amazon.nova-2-lite-v1:0"),
   tools: {
     queryBudgetDataTool,
     renderBudgetChartTool,

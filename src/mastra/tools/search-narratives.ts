@@ -1,9 +1,14 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { ConvexClient } from "convex/browser";
+import { ConvexHttpClient } from "convex/browser";
 import { anyApi } from "convex/server";
 
-const convex = new ConvexClient(process.env.CONVEX_URL!);
+const CONVEX_URL =
+  process.env.NEXT_PUBLIC_CONVEX_URL ??
+  process.env.CONVEX_URL ??
+  "https://polished-cuttlefish-191.convex.cloud";
+
+const convex = new ConvexHttpClient(CONVEX_URL);
 const budgetApi = anyApi["budget"];
 
 export const searchNarrativesTool = createTool({
