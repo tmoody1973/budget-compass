@@ -1,0 +1,205 @@
+{
+  "taxYear": 2026,
+  "effectiveDate": "2025-12-01",
+  "lastVerified": "2026-03-05",
+  "notes": "Official rates from City of Milwaukee Comptroller's 2025 Combined Property Tax Report (Bill Christianson, CPFO). Assessment year 2025, funding 2026 budgets. Gross rate excludes Lottery & First Dollar Tax Credits. School Levy Tax Credit shown separately.",
+  "source": "City of Milwaukee Comptroller, 2025 Combined Property Tax Report (TaxBrochure2025.pdf)",
+  "grossRate": 22.42,
+  "schoolLevyTaxCredit": -1.62,
+  "netRate": 20.80,
+  "priorYear": {
+    "grossRate": 24.65,
+    "schoolLevyTaxCredit": -1.72,
+    "netRate": 22.93,
+    "note": "2024 assessment year / 2025 budget year"
+  },
+  "additionalCredits": {
+    "lotteryCredit": 260.35,
+    "firstDollarCredit": 86.78,
+    "note": "Per-parcel flat amounts, not per-$1,000 rates. Applied to qualifying residential properties."
+  },
+  "jurisdictions": [
+    {
+      "id": "mps",
+      "name": "Milwaukee Public Schools",
+      "shortName": "MPS",
+      "rate": 9.66,
+      "priorYearRate": 10.61,
+      "change": -0.95,
+      "levy": 427100000,
+      "levySharePercent": 43,
+      "rateConfidence": "official",
+      "source": "City of Milwaukee Comptroller, 2025 Combined Property Tax Report",
+      "sourceDate": "2025-12-01",
+      "verificationNotes": "Official Comptroller rate of $9.66/1K. Levy of $427.1M (3.0% increase from $414.8M). MPS receives 43 cents of every property tax dollar. Rate decreased due to rising assessed values despite higher levy. Excludes school levy tax credit of $1.62/1K.",
+      "icon": "🎓",
+      "color": "#e11d48",
+      "desc": "K-12 education for ~66,000 students across 130+ schools",
+      "detail": "Largest share of your tax bill. Funds teacher salaries, school operations, special education, transportation, building maintenance, and extracurricular programs.",
+      "fundingNote": "MPS levy grew significantly due to voter-approved April 2024 referendum. Rate dropped from $10.61 to $9.66 as assessed values rose faster than the levy."
+    },
+    {
+      "id": "city",
+      "name": "City of Milwaukee",
+      "shortName": "City",
+      "rate": 7.61,
+      "priorYearRate": 8.29,
+      "change": -0.68,
+      "levy": 336800000,
+      "levySharePercent": 34,
+      "rateConfidence": "official",
+      "source": "City of Milwaukee Comptroller, 2025 Combined Property Tax Report",
+      "sourceDate": "2025-12-01",
+      "verificationNotes": "Official Comptroller rate of $7.61/1K. Levy of $336.8M (3.9% increase). City receives 34 cents of every property tax dollar. Note: Urban Milwaukee reported $7.64 at Council adoption — the $0.03 difference is due to final assessed value adjustments.",
+      "icon": "🏛️",
+      "color": "#2563eb",
+      "desc": "Police, fire, public works, libraries, health, and all city services",
+      "detail": "Funds city government operations across 21+ departments including police, fire, DPW, libraries, health, neighborhood services, and administration.",
+      "expandable": true
+    },
+    {
+      "id": "county",
+      "name": "Milwaukee County",
+      "shortName": "County",
+      "rate": 3.15,
+      "priorYearRate": 3.49,
+      "change": -0.34,
+      "levy": 139200000,
+      "levySharePercent": 14,
+      "rateConfidence": "official",
+      "source": "City of Milwaukee Comptroller, 2025 Combined Property Tax Report",
+      "sourceDate": "2025-12-01",
+      "verificationNotes": "Official Comptroller rate of $3.15/1K. Levy of $139.2M (2.9% increase). County receives 14 cents of every property tax dollar.",
+      "icon": "🏞️",
+      "color": "#7c3aed",
+      "desc": "Parks, transit, courts, behavioral health, and county services",
+      "detail": "Funds the county park system (15,000+ acres), Milwaukee County Transit System, county courts, medical examiner, and human services programs."
+    },
+    {
+      "id": "mmsd",
+      "name": "Milwaukee Metropolitan Sewerage District",
+      "shortName": "MMSD",
+      "rate": 1.24,
+      "priorYearRate": 1.37,
+      "change": -0.13,
+      "levy": 54600000,
+      "levySharePercent": 6,
+      "rateConfidence": "official",
+      "source": "City of Milwaukee Comptroller, 2025 Combined Property Tax Report",
+      "sourceDate": "2025-12-01",
+      "verificationNotes": "Official Comptroller rate of $1.24/1K. Levy of $54.6M (1.7% increase). MMSD receives 6 cents of every property tax dollar.",
+      "icon": "💧",
+      "color": "#0891b2",
+      "desc": "Wastewater treatment, flood management, and water quality",
+      "detail": "Operates the Jones Island and South Shore water reclamation facilities, manages the deep tunnel system, and funds overflow reduction and flood management projects."
+    },
+    {
+      "id": "matc",
+      "name": "Milwaukee Area Technical College",
+      "shortName": "MATC",
+      "rate": 0.76,
+      "priorYearRate": 0.89,
+      "change": -0.13,
+      "levy": 33800000,
+      "levySharePercent": 3,
+      "rateConfidence": "official",
+      "source": "City of Milwaukee Comptroller, 2025 Combined Property Tax Report",
+      "sourceDate": "2025-12-01",
+      "verificationNotes": "Official Comptroller rate of $0.76/1K. Levy of $33.8M (-2.6% decrease). MATC receives 3 cents of every property tax dollar.",
+      "icon": "📚",
+      "color": "#059669",
+      "desc": "Workforce training, associate degrees, and continuing education",
+      "detail": "Serves 30,000+ students at 4 campuses offering 170+ programs in healthcare, IT, manufacturing, and more."
+    }
+  ],
+  "medianHomeExample": {
+    "assessedValue": 166000,
+    "grossAnnualTax": 3721.72,
+    "schoolLevyCredit": -268.92,
+    "netAnnualTax": 3452.80,
+    "afterAllCredits": 3105.67,
+    "perJurisdiction": {
+      "mps": { "gross": 1603.56, "afterSchoolCredit": 1334.64 },
+      "city": 1263.26,
+      "county": 522.90,
+      "mmsd": 205.84,
+      "matc": 126.16
+    },
+    "monthlyEquivalent": 287.73,
+    "dailyEquivalent": 9.46,
+    "note": "Gross rate of $22.42/1K (sum of 5 jurisdictions) applied. School levy credit of $1.62/1K deducted from MPS portion yields net rate of $20.80/1K. Lottery credit ($260.35) and First Dollar Credit ($86.78) not included as they vary by property."
+  },
+  "cityBudgetSections": [
+    { "id": "gcp", "name": "General City Purposes", "levy": 144523699, "color": "#2563eb" },
+    { "id": "debt", "name": "City Debt Service", "levy": 106674678, "color": "#dc2626" },
+    { "id": "retirement", "name": "Employee Retirement", "levy": 76771645, "color": "#7c3aed" },
+    { "id": "contingent", "name": "Council Contingent Fund", "levy": 5000000, "color": "#d97706" },
+    { "id": "capital", "name": "Capital Improvements", "levy": 905000, "color": "#059669" }
+  ],
+  "cityServices": {
+    "publicSafety": { "percent": 51, "label": "Public Safety" },
+    "nonPropertyTaxRevenue": { "percent": 31, "label": "Non-Property Tax Revenue" },
+    "stateAids": { "percent": 21, "label": "State Aids" },
+    "propertyTax": { "percent": 23, "label": "Property Tax" },
+    "salesAndUseTax": { "percent": 14, "label": "Sales & Use Tax" },
+    "publicWorks": { "percent": 27, "label": "Public Works" },
+    "generalGovernment": { "percent": 10, "label": "General Government" },
+    "borrowing": { "percent": 8, "label": "Borrowing" },
+    "neighborhoodsAndDevelopment": { "percent": 6, "label": "Neighborhoods & Development" },
+    "health": { "percent": 4, "label": "Health" },
+    "cultureAndRecreation": { "percent": 2, "label": "Culture & Recreation" },
+    "reserves": { "percent": 3, "label": "Reserves" }
+  },
+  "serviceGroups": [
+    {
+      "name": "Public Safety",
+      "icon": "🛡️",
+      "color": "#dc2626",
+      "departments": [
+        { "name": "Police Department", "budget": 310135835, "revenue": 7674000 },
+        { "name": "Fire Department", "budget": 165408632, "revenue": 9458000 },
+        { "name": "Emergency Communications (911)", "budget": 27171944, "revenue": 0 },
+        { "name": "Fire & Police Commission", "budget": 5490902, "revenue": 0 }
+      ]
+    },
+    {
+      "name": "Infrastructure & Public Works",
+      "icon": "🏗️",
+      "color": "#0369a1",
+      "departments": [
+        { "name": "DPW Operations", "budget": 108435714, "revenue": 86900000 },
+        { "name": "DPW Infrastructure Services", "budget": 52806892, "revenue": 31200000 },
+        { "name": "DPW Administrative Services", "budget": 4068897, "revenue": 235000 }
+      ]
+    },
+    {
+      "name": "Community Services",
+      "icon": "🏘️",
+      "color": "#059669",
+      "departments": [
+        { "name": "Library", "budget": 33022606, "revenue": 1150000 },
+        { "name": "Neighborhood Services", "budget": 25881545, "revenue": 15600000 },
+        { "name": "Health Department", "budget": 22682951, "revenue": 11700000 },
+        { "name": "City Development", "budget": 8372639, "revenue": 1375000 }
+      ]
+    },
+    {
+      "name": "Government Operations",
+      "icon": "🏛️",
+      "color": "#6b21a8",
+      "departments": [
+        { "name": "Administration", "budget": 26253863, "revenue": 643000 },
+        { "name": "Common Council / City Clerk", "budget": 12721410, "revenue": 4000000 },
+        { "name": "City Attorney", "budget": 9356963, "revenue": 550000 },
+        { "name": "Employee Relations", "budget": 6395445, "revenue": 2320000 },
+        { "name": "Comptroller", "budget": 5877969, "revenue": 285600 },
+        { "name": "Assessor's Office", "budget": 5676889, "revenue": 1000000 },
+        { "name": "Election Commission", "budget": 5247509, "revenue": 0 },
+        { "name": "City Treasurer", "budget": 4781182, "revenue": 650000 },
+        { "name": "Municipal Court", "budget": 3890813, "revenue": 600500 },
+        { "name": "Mayor's Office", "budget": 2108535, "revenue": 0 },
+        { "name": "Port Milwaukee", "budget": 7060819, "revenue": 6300000 }
+      ]
+    }
+  ]
+}

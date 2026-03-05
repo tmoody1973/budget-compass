@@ -15,7 +15,17 @@ export const clearTable = mutation({
       | "performanceMeasures"
       | "positions"
       | "historicalComparison"
-      | "departmentNarratives";
+      | "departmentNarratives"
+      | "mpsOverview"
+      | "mpsFundGroups"
+      | "mpsOffices"
+      | "mpsExpenditures"
+      | "mpsPositions"
+      | "mpsEnrollment"
+      | "mpsForecast"
+      | "countyOverview"
+      | "countyDepartments"
+      | "countyRevenue";
     const rows = await ctx.db.query(tableName).collect();
     for (const row of rows) {
       await ctx.db.delete(row._id);
@@ -179,5 +189,161 @@ export const insertDepartmentNarrative = mutation({
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("departmentNarratives", args);
+  },
+});
+
+// ---- MPS insert mutations ----
+
+export const insertMpsOverview = mutation({
+  args: {
+    fiscalYear: v.string(),
+    totalBudget: v.number(),
+    totalRevenue: v.number(),
+    totalExpenditure: v.number(),
+    totalStudents: v.number(),
+    totalStaff: v.number(),
+    totalSchools: v.number(),
+    budgetType: v.string(),
+    superintendent: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("mpsOverview", args);
+  },
+});
+
+export const insertMpsFundGroup = mutation({
+  args: {
+    name: v.string(),
+    revenueActual2024: v.optional(v.number()),
+    revenueBudget2025: v.optional(v.number()),
+    revenueBudget2026: v.optional(v.number()),
+    expenditureActual2024: v.optional(v.number()),
+    expenditureBudget2025: v.optional(v.number()),
+    expenditureBudget2026: v.optional(v.number()),
+    revenueDifference: v.optional(v.number()),
+    expenditureDifference: v.optional(v.number()),
+    revenuePercentChange: v.optional(v.number()),
+    expenditurePercentChange: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("mpsFundGroups", args);
+  },
+});
+
+export const insertMpsOffice = mutation({
+  args: {
+    name: v.string(),
+    actual2024: v.optional(v.number()),
+    fteBudget2025: v.optional(v.number()),
+    budget2025: v.optional(v.number()),
+    fteBudget2026: v.optional(v.number()),
+    budget2026: v.optional(v.number()),
+    differenceFte: v.optional(v.number()),
+    differenceBudget: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("mpsOffices", args);
+  },
+});
+
+export const insertMpsExpenditure = mutation({
+  args: {
+    objectClass: v.string(),
+    actual2024: v.optional(v.number()),
+    fteBudget2025: v.optional(v.number()),
+    budget2025: v.optional(v.number()),
+    fteBudget2026: v.optional(v.number()),
+    budget2026: v.optional(v.number()),
+    differenceFte: v.optional(v.number()),
+    differenceBudget: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("mpsExpenditures", args);
+  },
+});
+
+export const insertMpsPosition = mutation({
+  args: {
+    positionType: v.string(),
+    fte2025: v.optional(v.number()),
+    fte2026: v.optional(v.number()),
+    differenceFte: v.optional(v.number()),
+    percentChange: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("mpsPositions", args);
+  },
+});
+
+export const insertMpsEnrollment = mutation({
+  args: {
+    schoolType: v.string(),
+    fy20: v.optional(v.number()),
+    fy21: v.optional(v.number()),
+    fy22: v.optional(v.number()),
+    fy23: v.optional(v.number()),
+    fy24: v.optional(v.number()),
+    fy25: v.optional(v.number()),
+    fy26: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("mpsEnrollment", args);
+  },
+});
+
+export const insertMpsForecast = mutation({
+  args: {
+    lineItem: v.string(),
+    category: v.string(),
+    fy25: v.optional(v.number()),
+    fy26: v.optional(v.number()),
+    fy27: v.optional(v.number()),
+    fy28: v.optional(v.number()),
+    fy29: v.optional(v.number()),
+    fy30: v.optional(v.number()),
+    changeFy30VsFy25: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("mpsForecast", args);
+  },
+});
+
+// ---- County insert mutations ----
+
+export const insertCountyOverview = mutation({
+  args: {
+    fiscalYear: v.string(),
+    totalBudget: v.number(),
+    totalOperatingBudget: v.optional(v.number()),
+    totalCapitalBudget: v.optional(v.number()),
+    totalTaxLevy: v.number(),
+    totalPositions: v.optional(v.number()),
+    countyExecutive: v.string(),
+    budgetType: v.string(),
+    salesTaxRevenue: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("countyOverview", args);
+  },
+});
+
+export const insertCountyDepartment = mutation({
+  args: {
+    functionalArea: v.string(),
+    expenditure2026: v.number(),
+    description: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("countyDepartments", args);
+  },
+});
+
+export const insertCountyRevenue = mutation({
+  args: {
+    source: v.string(),
+    amount2026: v.number(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("countyRevenue", args);
   },
 });

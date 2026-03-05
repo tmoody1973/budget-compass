@@ -1,61 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { UserButton } from "@clerk/nextjs";
-import { Chat } from "@/components/chat";
-
-const MODES = [
-  { id: "ask", label: "Ask", emoji: "\ud83d\udcac" },
-  { id: "remix", label: "Remix", emoji: "\ud83c\udf9b\ufe0f" },
-  { id: "see", label: "See", emoji: "\ud83c\udfa8" },
-  { id: "hear", label: "Hear", emoji: "\ud83c\udfa7" },
-] as const;
-
-type ModeId = (typeof MODES)[number]["id"];
+import { useBudget } from "@/contexts/budget-context";
+import { Landing } from "@/components/landing";
+import { AppShell } from "@/components/app-shell";
 
 export default function Home() {
-  const [activeMode, setActiveMode] = useState<ModeId>("ask");
-
-  return (
-    <main className="min-h-screen bg-mke-cream">
-      {/* Header */}
-      <header className="border-b-2 border-mke-dark bg-white px-3 py-2 shadow-[0_2px_0px_0px_#1A1A2E] sm:px-6 sm:py-3">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <div className="flex items-center justify-between">
-            <h1 className="font-head text-lg font-bold text-mke-blue sm:text-2xl">
-              MKE Budget Compass
-            </h1>
-            <div className="sm:hidden">
-              <UserButton />
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <nav className="flex w-full gap-1.5 overflow-x-auto sm:gap-2 sm:overflow-visible">
-              {MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  onClick={() => setActiveMode(mode.id)}
-                  className={`shrink-0 rounded-lg border-2 border-mke-dark px-2.5 py-1.5 text-xs font-bold transition-all sm:px-4 sm:py-2 sm:text-sm ${
-                    activeMode === mode.id
-                      ? "bg-mke-blue text-white shadow-[2px_2px_0px_0px_#1A1A2E]"
-                      : "bg-white text-mke-dark shadow-[3px_3px_0px_0px_#1A1A2E] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-mke-cream hover:shadow-[1px_1px_0px_0px_#1A1A2E]"
-                  }`}
-                >
-                  {mode.emoji} {mode.label}
-                </button>
-              ))}
-            </nav>
-            <div className="hidden sm:block">
-              <UserButton />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Mode content */}
-      <div className="mx-auto h-[calc(100vh-80px)] max-w-6xl p-3 sm:h-[calc(100vh-64px)] sm:p-6">
-        <Chat className="h-full rounded-lg border-2 border-mke-dark bg-mke-cream shadow-[4px_4px_0px_0px_#1A1A2E]" />
-      </div>
-    </main>
-  );
+  const { isLanded } = useBudget();
+  return isLanded ? <AppShell /> : <Landing />;
 }

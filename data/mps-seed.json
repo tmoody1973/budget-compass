@@ -1,0 +1,79 @@
+{
+  "overview": {
+    "fiscalYear": "2025-26",
+    "totalBudget": 1548971230,
+    "totalRevenue": 1548971230,
+    "totalExpenditure": 1548971230,
+    "totalStudents": 65365,
+    "totalStaff": 9500,
+    "totalSchools": 130,
+    "budgetType": "Proposed",
+    "superintendent": "Keith P. Posley"
+  },
+  "fundGroups": [
+    { "name": "School Operations Fund", "revenueBudget2026": 1212900000, "expenditureBudget2026": 1212900000 },
+    { "name": "Grants and Categorical Aids", "revenueBudget2026": 175700000, "expenditureBudget2026": 175700000 },
+    { "name": "Nutrition Services", "revenueBudget2026": 62700000, "expenditureBudget2026": 62700000 },
+    { "name": "Milwaukee Recreation", "revenueBudget2026": 39400000, "expenditureBudget2026": 39400000 },
+    { "name": "Debt Service Fund", "revenueBudget2026": 27800000, "expenditureBudget2026": 27800000 },
+    { "name": "Capital & Deferred Maintenance Trust", "revenueBudget2026": 27800000, "expenditureBudget2026": 27800000 },
+    { "name": "Construction Fund", "revenueBudget2026": 2700000, "expenditureBudget2026": 2700000 }
+  ],
+  "offices": [
+    { "name": "Schools", "budget2026": 882700000 },
+    { "name": "Operations", "budget2026": 301400000 },
+    { "name": "Academics", "budget2026": 146400000 },
+    { "name": "District Wide", "budget2026": 56500000 },
+    { "name": "Families & Community Engagement", "budget2026": 49300000 },
+    { "name": "Office of Schools", "budget2026": 31700000 },
+    { "name": "Human Resources", "budget2026": 27600000 },
+    { "name": "Pass Through - Private", "budget2026": 24600000 },
+    { "name": "Finance", "budget2026": 17000000 },
+    { "name": "Communications & School Performance", "budget2026": 2800000 },
+    { "name": "Accountability & Efficiency", "budget2026": 2500000 },
+    { "name": "Superintendent", "budget2026": 2300000 },
+    { "name": "Legal", "budget2026": 2200000 },
+    { "name": "Board Governance", "budget2026": 1600000 },
+    { "name": "Board of School Directors", "budget2026": 400000 }
+  ],
+  "expenditures": [
+    { "objectClass": "Salaries", "budget2026": 626900000 },
+    { "objectClass": "Employee Benefits", "budget2026": 355900000 },
+    { "objectClass": "Purchased Services", "budget2026": 376600000 },
+    { "objectClass": "Other Wages", "budget2026": 29400000 },
+    { "objectClass": "Supplies & Materials", "budget2026": 87000000 },
+    { "objectClass": "Equipment", "budget2026": 10000000 },
+    { "objectClass": "Other Objects", "budget2026": 63100000 }
+  ],
+  "positions": [
+    { "positionType": "Teachers", "fte2026": 4511.2 },
+    { "positionType": "Educational Assistants", "fte2026": 1319.5 },
+    { "positionType": "Administrative Support", "fte2026": 525.7 },
+    { "positionType": "Building Services", "fte2026": 378.3 },
+    { "positionType": "Clerical", "fte2026": 341.0 },
+    { "positionType": "Food Service Workers", "fte2026": 330.0 },
+    { "positionType": "Health Assistants", "fte2026": 298.9 },
+    { "positionType": "Certificated Administrators", "fte2026": 286.7 },
+    { "positionType": "Safety Aides", "fte2026": 266.1 },
+    { "positionType": "Engineers", "fte2026": 246.4 },
+    { "positionType": "Social Workers", "fte2026": 185.3 },
+    { "positionType": "Psychologists", "fte2026": 171.3 },
+    { "positionType": "Trades", "fte2026": 154.0 },
+    { "positionType": "Assistant Principals", "fte2026": 148.0 },
+    { "positionType": "Principals", "fte2026": 125.0 },
+    { "positionType": "Food Service Managers", "fte2026": 122.0 },
+    { "positionType": "Nurses", "fte2026": 73.0 },
+    { "positionType": "Therapists", "fte2026": 50.0 },
+    { "positionType": "Bookkeepers", "fte2026": 34.0 },
+    { "positionType": "Social Worker Assistants", "fte2026": 23.8 }
+  ],
+  "enrollment": [
+    { "schoolType": "Total", "fy20": 74678, "fy21": 71826, "fy22": 68590, "fy23": 67026, "fy24": 66591, "fy25": 65924, "fy26": 65365 }
+  ],
+  "forecast": [
+    { "lineItem": "Total Revenue", "category": "revenue", "fy25": 1168100000, "fy26": 1212900000, "fy27": 1240800000, "fy28": 1264100000, "fy29": 1291400000, "fy30": 1322800000 },
+    { "lineItem": "Total Expenditure", "category": "expenditure", "fy25": 1168100000, "fy26": 1212900000, "fy27": 1265400000, "fy28": 1316500000, "fy29": 1355800000, "fy30": 1379800000 },
+    { "lineItem": "Annual Surplus/(Deficit)", "category": "balance", "fy25": 0, "fy26": 0, "fy27": -24600000, "fy28": -52400000, "fy29": -64400000, "fy30": -57000000 },
+    { "lineItem": "Cumulative Surplus/(Deficit)", "category": "cumulative", "fy25": 0, "fy26": 0, "fy27": -24600000, "fy28": -77000000, "fy29": -141400000, "fy30": -144700000 }
+  ]
+}

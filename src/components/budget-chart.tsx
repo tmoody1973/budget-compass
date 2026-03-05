@@ -1,28 +1,9 @@
 "use client";
 
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import ReactECharts from "echarts-for-react";
 
 const MKE_COLORS = [
-  "#0A3161",
-  "#D4A574",
-  "#2E8B57",
-  "#C41E3A",
-  "#5B8BA0",
-  "#8B6914",
+  "#0A3161", "#D4A574", "#2E8B57", "#C41E3A", "#5B8BA0", "#8B6914",
 ];
 
 interface ChartData {
@@ -42,10 +23,8 @@ interface BudgetChartProps {
 
 const formatValue = (value: number, unit?: string) => {
   if (unit === "$" || !unit) {
-    if (Math.abs(value) >= 1_000_000_000)
-      return `$${(value / 1_000_000_000).toFixed(1)}B`;
-    if (Math.abs(value) >= 1_000_000)
-      return `$${(value / 1_000_000).toFixed(1)}M`;
+    if (Math.abs(value) >= 1_000_000_000) return `$${(value / 1_000_000_000).toFixed(1)}B`;
+    if (Math.abs(value) >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
     if (Math.abs(value) >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
     return `$${value.toLocaleString()}`;
   }
@@ -53,185 +32,107 @@ const formatValue = (value: number, unit?: string) => {
   return `${value.toLocaleString()} ${unit}`;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const tooltipFormatter = (unit?: string) => (value: any) => [
-  formatValue(Number(value ?? 0), unit),
-  "Amount",
-];
+export function BudgetChart({ chartType, title, data, xLabel, yLabel, unit }: BudgetChartProps) {
+  const colors = data.map((d, i) => d.color ?? MKE_COLORS[i % MKE_COLORS.length]);
 
-export function BudgetChart({
-  chartType,
-  title,
-  data,
-  xLabel,
-  yLabel,
-  unit,
-}: BudgetChartProps) {
-  const chartData = data.map((d, i) => ({
-    name: d.label,
-    value: d.value,
-    fill: d.color ?? MKE_COLORS[i % MKE_COLORS.length],
-  }));
-
-  const renderChart = () => {
+  const getOption = () => {
     switch (chartType) {
       case "bar":
-        return (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8DDD0" />
-              <XAxis
-                type="number"
-                tickFormatter={(v) => formatValue(v, unit)}
-                label={
-                  xLabel
-                    ? { value: xLabel, position: "insideBottom", offset: -5 }
-                    : undefined
-                }
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                width={75}
-                tick={{ fontSize: 12 }}
-                label={
-                  yLabel
-                    ? {
-                        value: yLabel,
-                        angle: -90,
-                        position: "insideLeft",
-                      }
-                    : undefined
-                }
-              />
-              <Tooltip
-                formatter={tooltipFormatter(unit)}
-                contentStyle={{
-                  border: "2px solid #1A1A2E",
-                  borderRadius: "4px",
-                  boxShadow: "2px 2px 0px 0px #1A1A2E",
-                }}
-              />
-              <Legend />
-              <Bar dataKey="value" name={yLabel ?? "Amount"} radius={[0, 4, 4, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.fill}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        );
-
-      case "line":
-        return (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={chartData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8DDD0" />
-              <XAxis
-                dataKey="name"
-                tick={{ fontSize: 12 }}
-                label={
-                  xLabel
-                    ? { value: xLabel, position: "insideBottom", offset: -5 }
-                    : undefined
-                }
-              />
-              <YAxis
-                tickFormatter={(v) => formatValue(v, unit)}
-                tick={{ fontSize: 12 }}
-                label={
-                  yLabel
-                    ? {
-                        value: yLabel,
-                        angle: -90,
-                        position: "insideLeft",
-                      }
-                    : undefined
-                }
-              />
-              <Tooltip
-                formatter={tooltipFormatter(unit)}
-                contentStyle={{
-                  border: "2px solid #1A1A2E",
-                  borderRadius: "4px",
-                  boxShadow: "2px 2px 0px 0px #1A1A2E",
-                }}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="value"
-                name={yLabel ?? "Amount"}
-                stroke="#0A3161"
-                strokeWidth={2}
-                dot={{ fill: "#0A3161", r: 4 }}
-                activeDot={{ r: 6, fill: "#D4A574" }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        );
+        return {
+          tooltip: {
+            trigger: "axis",
+            formatter: (params: any) => {
+              const p = params[0];
+              return `${p.name}: ${formatValue(p.value, unit)}`;
+            },
+          },
+          xAxis: { type: "category", data: data.map(d => d.label), name: xLabel },
+          yAxis: {
+            type: "value",
+            name: yLabel,
+            axisLabel: { formatter: (v: number) => formatValue(v, unit) },
+          },
+          series: [{
+            type: "bar",
+            data: data.map((d, i) => ({
+              value: d.value,
+              itemStyle: { color: colors[i], borderColor: "#1A1A2E", borderWidth: 1 },
+            })),
+            animationDuration: 800,
+            animationEasing: "elasticOut",
+          }],
+        };
 
       case "pie":
+        return {
+          tooltip: {
+            formatter: (p: any) => `${p.name}: ${formatValue(p.value, unit)} (${p.percent}%)`,
+          },
+          series: [{
+            type: "pie",
+            radius: ["30%", "70%"],
+            data: data.map((d, i) => ({
+              name: d.label,
+              value: d.value,
+              itemStyle: { color: colors[i], borderColor: "#1A1A2E", borderWidth: 2 },
+            })),
+            animationType: "scale",
+            animationDuration: 800,
+            label: { formatter: "{b}: {d}%" },
+          }],
+        };
+
+      case "line":
+        return {
+          tooltip: { trigger: "axis" },
+          xAxis: { type: "category", data: data.map(d => d.label), name: xLabel },
+          yAxis: {
+            type: "value",
+            name: yLabel,
+            axisLabel: { formatter: (v: number) => formatValue(v, unit) },
+          },
+          series: [{
+            type: "line",
+            data: data.map(d => d.value),
+            smooth: true,
+            lineStyle: { color: "#0A3161", width: 3 },
+            areaStyle: { color: "rgba(10, 49, 97, 0.1)" },
+            animationDuration: 1000,
+          }],
+        };
+
       case "treemap":
-        return (
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={true}
-                label={({ name, value }) =>
-                  `${name}: ${formatValue(value, unit)}`
-                }
-                outerRadius={100}
-                dataKey="value"
-                nameKey="name"
-              >
-                {chartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.fill}
-                    stroke="#1A1A2E"
-                    strokeWidth={1}
-                  />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={tooltipFormatter(unit)}
-                contentStyle={{
-                  border: "2px solid #1A1A2E",
-                  borderRadius: "4px",
-                  boxShadow: "2px 2px 0px 0px #1A1A2E",
-                }}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        );
+        return {
+          tooltip: {
+            formatter: (p: any) => `${p.name}: ${formatValue(p.value, unit)}`,
+          },
+          series: [{
+            type: "treemap",
+            data: data.map((d, i) => ({
+              name: d.label,
+              value: d.value,
+              itemStyle: { color: colors[i], borderColor: "#1A1A2E", borderWidth: 2 },
+            })),
+            label: {
+              show: true,
+              formatter: (p: any) => `${p.name}\n${formatValue(p.value, unit)}`,
+              fontSize: 12,
+              fontWeight: "bold",
+            },
+            breadcrumb: { show: false },
+            animationDuration: 800,
+          }],
+        };
 
       default:
-        return <p className="text-muted-foreground">Unsupported chart type.</p>;
+        return {};
     }
   };
 
   return (
     <div className="rounded-lg border-2 border-mke-dark bg-white p-4 shadow-[4px_4px_0px_0px_#1A1A2E]">
-      <h3 className="mb-3 font-head text-lg font-bold text-mke-blue">
-        {title}
-      </h3>
-      {renderChart()}
+      <h3 className="mb-3 font-head text-lg font-bold text-mke-blue">{title}</h3>
+      <ReactECharts option={getOption()} style={{ height: 300 }} />
     </div>
   );
 }

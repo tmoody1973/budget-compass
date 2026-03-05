@@ -129,4 +129,108 @@ export default defineSchema({
       searchField: "fullText",
       filterFields: ["department"],
     }),
+
+  // MPS Budget Tables
+  mpsOverview: defineTable({
+    fiscalYear: v.string(),
+    totalBudget: v.number(),
+    totalRevenue: v.number(),
+    totalExpenditure: v.number(),
+    totalStudents: v.number(),
+    totalStaff: v.number(),
+    totalSchools: v.number(),
+    budgetType: v.string(),
+    superintendent: v.string(),
+  }),
+
+  mpsFundGroups: defineTable({
+    name: v.string(),
+    revenueActual2024: v.optional(v.number()),
+    revenueBudget2025: v.optional(v.number()),
+    revenueBudget2026: v.optional(v.number()),
+    expenditureActual2024: v.optional(v.number()),
+    expenditureBudget2025: v.optional(v.number()),
+    expenditureBudget2026: v.optional(v.number()),
+    revenueDifference: v.optional(v.number()),
+    expenditureDifference: v.optional(v.number()),
+    revenuePercentChange: v.optional(v.number()),
+    expenditurePercentChange: v.optional(v.number()),
+  }).index("by_name", ["name"]),
+
+  mpsOffices: defineTable({
+    name: v.string(),
+    actual2024: v.optional(v.number()),
+    fteBudget2025: v.optional(v.number()),
+    budget2025: v.optional(v.number()),
+    fteBudget2026: v.optional(v.number()),
+    budget2026: v.optional(v.number()),
+    differenceFte: v.optional(v.number()),
+    differenceBudget: v.optional(v.number()),
+  }).index("by_name", ["name"]),
+
+  mpsExpenditures: defineTable({
+    objectClass: v.string(),
+    actual2024: v.optional(v.number()),
+    fteBudget2025: v.optional(v.number()),
+    budget2025: v.optional(v.number()),
+    fteBudget2026: v.optional(v.number()),
+    budget2026: v.optional(v.number()),
+    differenceFte: v.optional(v.number()),
+    differenceBudget: v.optional(v.number()),
+  }).index("by_class", ["objectClass"]),
+
+  mpsPositions: defineTable({
+    positionType: v.string(),
+    fte2025: v.optional(v.number()),
+    fte2026: v.optional(v.number()),
+    differenceFte: v.optional(v.number()),
+    percentChange: v.optional(v.number()),
+  }).index("by_type", ["positionType"]),
+
+  mpsEnrollment: defineTable({
+    schoolType: v.string(),
+    fy20: v.optional(v.number()),
+    fy21: v.optional(v.number()),
+    fy22: v.optional(v.number()),
+    fy23: v.optional(v.number()),
+    fy24: v.optional(v.number()),
+    fy25: v.optional(v.number()),
+    fy26: v.optional(v.number()),
+  }).index("by_type", ["schoolType"]),
+
+  mpsForecast: defineTable({
+    lineItem: v.string(),
+    category: v.string(),
+    fy25: v.optional(v.number()),
+    fy26: v.optional(v.number()),
+    fy27: v.optional(v.number()),
+    fy28: v.optional(v.number()),
+    fy29: v.optional(v.number()),
+    fy30: v.optional(v.number()),
+    changeFy30VsFy25: v.optional(v.number()),
+  }).index("by_category", ["category"]),
+
+  // County Budget Tables
+  countyOverview: defineTable({
+    fiscalYear: v.string(),
+    totalBudget: v.number(),
+    totalOperatingBudget: v.optional(v.number()),
+    totalCapitalBudget: v.optional(v.number()),
+    totalTaxLevy: v.number(),
+    totalPositions: v.optional(v.number()),
+    countyExecutive: v.string(),
+    budgetType: v.string(),
+    salesTaxRevenue: v.optional(v.number()),
+  }),
+
+  countyDepartments: defineTable({
+    functionalArea: v.string(),
+    expenditure2026: v.number(),
+    description: v.optional(v.string()),
+  }).index("by_functional_area", ["functionalArea"]),
+
+  countyRevenue: defineTable({
+    source: v.string(),
+    amount2026: v.number(),
+  }).index("by_source", ["source"]),
 });

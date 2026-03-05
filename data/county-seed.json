@@ -1,0 +1,38 @@
+{
+  "sources": [
+    "Wisconsin Policy Forum Budget Brief: Milwaukee County 2026 Executive Budget, October 2025",
+    "Milwaukee County 2026 Adopted Operating Budget"
+  ],
+  "countyOverview": {
+    "fiscalYear": "2026",
+    "totalBudget": 1390000000,
+    "totalOperatingBudget": 1280000000,
+    "totalCapitalBudget": 108000000,
+    "totalTaxLevy": 309014834,
+    "totalPositions": 4112,
+    "countyExecutive": "David Crowley",
+    "budgetType": "Adopted",
+    "salesTaxRevenue": 192500000
+  },
+  "countyDepartments": [
+    { "functionalArea": "Health & Human Services", "expenditure2026": 398400000, "description": "Includes $216M Behavioral Health Services" },
+    { "functionalArea": "Transportation & Public Works", "expenditure2026": 362900000, "description": "Includes $155.7M MCTS" },
+    { "functionalArea": "Public Safety", "expenditure2026": 178000000, "description": "Includes Sheriff ($75.1M, 708-709 FTEs)" },
+    { "functionalArea": "Parks, Recreation & Culture", "expenditure2026": 116900000 },
+    { "functionalArea": "Administration", "expenditure2026": 113200000 },
+    { "functionalArea": "Non-Departmental", "expenditure2026": 110300000 },
+    { "functionalArea": "Debt Service", "expenditure2026": 52000000 },
+    { "functionalArea": "Courts & Judiciary", "expenditure2026": 40100000 },
+    { "functionalArea": "General Government", "expenditure2026": 11400000 },
+    { "functionalArea": "Legislative & Executive", "expenditure2026": 2700000 }
+  ],
+  "countyRevenue": [
+    { "source": "Direct Revenue", "amount2026": 411500000 },
+    { "source": "State Revenue", "amount2026": 312800000 },
+    { "source": "Property Tax Levy", "amount2026": 310800000 },
+    { "source": "Sales Tax", "amount2026": 192500000 },
+    { "source": "Federal Revenue", "amount2026": 96700000 },
+    { "source": "Bond Proceeds", "amount2026": 56700000 },
+    { "source": "Prior-Year Surplus", "amount2026": 5000000 }
+  ]
+}
