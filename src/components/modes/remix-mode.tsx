@@ -73,9 +73,9 @@ export function RemixMode() {
   const budgetDelta = totalBudget - originalTotal;
 
   return (
-    <div className="flex h-full gap-6">
+    <div className="flex h-full flex-col gap-4 md:flex-row md:gap-6">
       {/* Left: Sliders */}
-      <div className="w-1/2 overflow-y-auto pr-2">
+      <div className="w-full overflow-y-auto pr-0 md:w-1/2 md:pr-2">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-head text-xl font-bold text-mke-blue">
             Budget Allocations
@@ -133,7 +133,7 @@ export function RemixMode() {
       </div>
 
       {/* Right: Consequence panel */}
-      <ConsequencePanel className="w-1/2 h-full" />
+      <ConsequencePanel className="w-full md:w-1/2 h-full" />
     </div>
   );
 }

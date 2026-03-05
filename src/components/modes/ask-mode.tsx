@@ -5,10 +5,10 @@ import { useCopilotAction } from "@copilotkit/react-core";
 import { BudgetChart } from "../budget-chart";
 
 const STARTER_QUESTIONS = [
-  "How much do we spend on police?",
-  "Show me the top 5 departments by budget",
-  "Compare parks vs library funding",
-  "What percentage goes to public safety?",
+  "What is Milwaukee's total 2026 budget?",
+  "Compare police and fire department spending",
+  "How has the library budget changed?",
+  "Where do my property tax dollars go?",
 ];
 
 export function AskMode() {
@@ -61,7 +61,7 @@ export function AskMode() {
         {STARTER_QUESTIONS.map((q) => (
           <button
             key={q}
-            className="rounded-lg border-2 border-mke-dark bg-white px-3 py-1.5 text-sm font-medium text-mke-dark shadow-[2px_2px_0px_0px_#1A1A2E] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#1A1A2E]"
+            className="rounded-lg border-2 border-mke-dark bg-white px-2 py-1 text-xs font-medium text-mke-dark shadow-[2px_2px_0px_0px_#1A1A2E] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#1A1A2E] sm:px-3 sm:py-1.5 sm:text-sm"
             onClick={(e) => {
               // Find the CopilotKit textarea and set its value, then submit
               const textarea = document.querySelector(

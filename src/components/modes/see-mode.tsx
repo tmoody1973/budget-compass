@@ -163,7 +163,7 @@ export function SeeMode() {
           <button
             key={preset.label}
             onClick={() => sendPresetMessage(preset.label)}
-            className="rounded-lg border-2 border-mke-dark bg-white px-3 py-2 text-sm font-bold shadow-[3px_3px_0px_0px_#1A1A2E] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_#1A1A2E]"
+            className="rounded-lg border-2 border-mke-dark bg-white px-2 py-1.5 text-xs font-bold shadow-[3px_3px_0px_0px_#1A1A2E] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_#1A1A2E] sm:px-3 sm:py-2 sm:text-sm"
           >
             {preset.icon} {preset.label}
           </button>

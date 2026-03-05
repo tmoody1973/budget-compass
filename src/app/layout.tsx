@@ -27,6 +27,11 @@ export const metadata: Metadata = {
   title: "MKE Budget Compass",
   description:
     "AI-powered civic intelligence for Milwaukee's $1.4B budget",
+  openGraph: {
+    title: "MKE Budget Compass",
+    description:
+      "Ask, visualize, listen to, and remix Milwaukee's city budget",
+  },
 };
 
 export default function RootLayout({
