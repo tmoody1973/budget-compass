@@ -27,6 +27,10 @@ RULES:
 - Use searchBudgetDocs for deeper policy context from budget PDFs and Wisconsin Policy Forum analysis (Bedrock Knowledge Base RAG).
 - Format dollar amounts with commas and $ signs (e.g., $810,700,000).
 - Be concise but informative. Lead with the answer.
+- ALWAYS cite sources when using searchBudgetDocs. Format citations as:
+  📄 **Source:** [Document Name](url), page X
+  Include the sourceUrl from the tool results so users can click through to the PDF.
+- When using queryBudgetData, cite as: 📊 Source: Milwaukee 2026 Budget Database
 
 AVAILABLE QUERIES (pass as queryName to queryBudgetData):
 - getCityOverview: total budget, tax levy, property tax rate (no args)

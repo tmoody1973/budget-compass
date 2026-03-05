@@ -137,6 +137,33 @@ function formatCurrency(value: number): string {
   return `$${value.toLocaleString()}`;
 }
 
+/** Render basic markdown: **bold**, [links](url), and line breaks */
+function renderMarkdown(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|\n)/g);
+  return parts.map((part, i) => {
+    // Bold
+    const boldMatch = part.match(/^\*\*(.+)\*\*$/);
+    if (boldMatch) return <strong key={i}>{boldMatch[1]}</strong>;
+    // Link
+    const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (linkMatch)
+      return (
+        <a
+          key={i}
+          href={linkMatch[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-blue-700 underline hover:text-blue-900"
+        >
+          {linkMatch[1]}
+        </a>
+      );
+    // Line break
+    if (part === "\n") return <br key={i} />;
+    return part;
+  });
+}
+
 export function AskChat() {
   const { persona, assessedValue, totalTax } = useBudget();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -287,7 +314,9 @@ export function AskChat() {
                       : "rounded-bl-md border border-gray-200 bg-gray-100 text-gray-900"
                   }`}
                 >
-                  {msg.content}
+                  {msg.role === "assistant"
+                    ? renderMarkdown(msg.content)
+                    : msg.content}
                   {msg.role === "assistant" && !usedRealApi && (
                     <p className="mt-2 border-t border-gray-200 pt-1.5 text-[10px] text-gray-400">
                       {"\ud83e\udd16"} Powered by Amazon Nova via Bedrock. Showing cached
