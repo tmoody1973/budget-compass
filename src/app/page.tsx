@@ -1,28 +1,8 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useState } from "react";
 import { UserButton } from "@clerk/nextjs";
-
-const AskMode = dynamic(
-  () => import("@/components/modes/ask-mode").then((m) => m.AskMode),
-  { ssr: false },
-);
-
-const RemixMode = dynamic(
-  () => import("@/components/modes/remix-mode").then((m) => ({ default: m.RemixMode })),
-  { ssr: false },
-);
-
-const SeeMode = dynamic(
-  () => import("@/components/modes/see-mode").then((m) => ({ default: m.SeeMode })),
-  { ssr: false },
-);
-
-const HearMode = dynamic(
-  () => import("@/components/modes/hear-mode").then((m) => ({ default: m.HearMode })),
-  { ssr: false },
-);
+import { Chat } from "@/components/chat";
 
 const MODES = [
   { id: "ask", label: "Ask", emoji: "\ud83d\udcac" },
@@ -74,10 +54,7 @@ export default function Home() {
 
       {/* Mode content */}
       <div className="mx-auto h-[calc(100vh-80px)] max-w-6xl p-3 sm:h-[calc(100vh-64px)] sm:p-6">
-        {activeMode === "ask" && <AskMode />}
-        {activeMode === "remix" && <RemixMode />}
-        {activeMode === "see" && <SeeMode />}
-        {activeMode === "hear" && <HearMode />}
+        <Chat className="h-full rounded-lg border-2 border-mke-dark bg-mke-cream shadow-[4px_4px_0px_0px_#1A1A2E]" />
       </div>
     </main>
   );
