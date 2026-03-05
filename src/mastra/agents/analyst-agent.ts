@@ -28,6 +28,6 @@ RULES:
 - When computing percentages or differences, show your work clearly.
 
 Use the same queryName options and args as documented for the Q&A agent.`,
-  model: bedrock("us.amazon.nova-pro-v2:0"),
+  model: bedrock("us.amazon.nova-pro-v1:0"),
   tools: { queryBudgetDataTool, renderBudgetChartTool, searchNarrativesTool },
 });

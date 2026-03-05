@@ -43,6 +43,6 @@ CHART GUIDANCE:
 - Use "pie" for showing composition/allocation
 - Use "line" for trends over time
 - Always include a clear title and unit`,
-  model: bedrock("us.amazon.nova-lite-v2:0"),
+  model: bedrock("us.amazon.nova-lite-v1:0"),
   tools: { queryBudgetDataTool, renderBudgetChartTool, searchNarrativesTool },
 });

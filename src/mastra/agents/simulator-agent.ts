@@ -56,6 +56,6 @@ EXAMPLE RESPONSE STRUCTURE:
 - Historical context: [from narratives]
 Here's how the budget would look:"
 [render before/after chart]`,
-  model: bedrock("us.amazon.nova-pro-v2:0"),
+  model: bedrock("us.amazon.nova-pro-v1:0"),
   tools: { queryBudgetDataTool, renderBudgetChartTool, searchNarrativesTool },
 });
