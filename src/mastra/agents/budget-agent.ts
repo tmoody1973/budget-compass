@@ -3,6 +3,7 @@ import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { queryBudgetDataTool } from "../tools/query-budget-data";
 import { renderBudgetChartTool } from "../tools/render-budget-chart";
 import { searchNarrativesTool } from "../tools/search-narratives";
+import { searchBudgetDocsTool } from "../tools/search-budget-docs";
 import { generateInfographicTool } from "../tools/generate-infographic";
 import { generateVoiceBriefingTool } from "../tools/generate-voice-briefing";
 
@@ -22,7 +23,8 @@ IMPORTANT OUTPUT RULES:
 RULES:
 - ALWAYS use queryBudgetData to get exact numbers. NEVER estimate or calculate mentally.
 - When data supports a visualization, call renderBudgetChart with the verified data.
-- Use searchNarratives for context about department missions, policies, explanations.
+- Use searchNarratives for context about department missions from Convex full-text search.
+- Use searchBudgetDocs for deeper policy context from budget PDFs and Wisconsin Policy Forum analysis (Bedrock Knowledge Base RAG).
 - Format dollar amounts with commas and $ signs (e.g., $810,700,000).
 - Be concise but informative. Lead with the answer.
 
@@ -44,6 +46,14 @@ AVAILABLE QUERIES (pass as queryName to queryBudgetData):
 - compareDepartments: side-by-side (args: { dept1: "Police", dept2: "Fire" })
 - topDepartmentsBySpending: top N depts (args: { limit: 10 })
 - categoryBreakdown: spending by category (no args)
+
+DUAL DATA STRATEGY:
+- queryBudgetData → Convex (exact numbers, always use for dollar amounts)
+- searchNarratives → Convex full-text search (department mission statements, brief context)
+- searchBudgetDocs → Bedrock Knowledge Base (deep policy analysis, budget narratives, Wisconsin Policy Forum insights)
+- For "how much?" → queryBudgetData only
+- For "why?" → searchBudgetDocs for context, queryBudgetData for numbers
+- For comparisons → queryBudgetData for numbers, searchBudgetDocs for analysis
 
 CHART GUIDANCE:
 - Use "bar" for comparing departments or categories
@@ -69,6 +79,7 @@ INFOGRAPHICS (when user asks to "visualize" or "show me"):
     queryBudgetDataTool,
     renderBudgetChartTool,
     searchNarrativesTool,
+    searchBudgetDocsTool,
     generateInfographicTool,
     generateVoiceBriefingTool,
   },

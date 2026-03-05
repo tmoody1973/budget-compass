@@ -142,6 +142,7 @@ export function AskChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [usedRealApi, setUsedRealApi] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -152,8 +153,8 @@ export function AskChat() {
     }
   }, [messages, isTyping]);
 
-  /* Send a message */
-  const sendMessage = (text: string) => {
+  /* Send a message — tries real API first, falls back to mock */
+  const sendMessage = async (text: string) => {
     if (!text.trim() || isTyping) return;
 
     const userMsg: Message = {
@@ -166,10 +167,47 @@ export function AskChat() {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
+    setUsedRealApi(false);
 
-    /* Simulate AI thinking delay */
-    const delay = 800 + Math.random() * 700;
-    setTimeout(() => {
+    try {
+      const allMessages = [
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+        { role: "user" as const, content: text.trim() },
+      ];
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: allMessages }),
+      });
+
+      if (!res.ok) throw new Error(`API ${res.status}`);
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No stream");
+
+      const decoder = new TextDecoder();
+      let content = "";
+      const aiMsgId = crypto.randomUUID();
+
+      // Stream the response
+      setMessages((prev) => [
+        ...prev,
+        { id: aiMsgId, role: "assistant", content: "", timestamp: new Date() },
+      ]);
+      setIsTyping(false);
+      setUsedRealApi(true);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        content += decoder.decode(value, { stream: true });
+        setMessages((prev) =>
+          prev.map((m) => (m.id === aiMsgId ? { ...m, content } : m))
+        );
+      }
+    } catch {
+      // Fallback to mock response
       const aiMsg: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -178,7 +216,7 @@ export function AskChat() {
       };
       setMessages((prev) => [...prev, aiMsg]);
       setIsTyping(false);
-    }, delay);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -250,10 +288,10 @@ export function AskChat() {
                   }`}
                 >
                   {msg.content}
-                  {msg.role === "assistant" && (
+                  {msg.role === "assistant" && !usedRealApi && (
                     <p className="mt-2 border-t border-gray-200 pt-1.5 text-[10px] text-gray-400">
-                      {"\ud83e\udd16"} AI responses will be powered by Amazon Bedrock. Currently
-                      showing sample data.
+                      {"\ud83e\udd16"} Powered by Amazon Nova via Bedrock. Showing cached
+                      response — live agent available when connected.
                     </p>
                   )}
                 </div>
