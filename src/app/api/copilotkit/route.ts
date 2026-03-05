@@ -9,67 +9,17 @@ import { mastra } from "../../../mastra";
 
 export const maxDuration = 60;
 
-/**
- * Strip Nova's spontaneous <thinking>...</thinking> tags from SSE stream.
- * Nova v1 models emit these as plain text — not a structured reasoning block.
- */
-function stripThinkingTags(stream: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
-  const decoder = new TextDecoder();
-  const encoder = new TextEncoder();
-  let buffer = "";
-  let insideThinking = false;
-
-  return new TransformStream<Uint8Array, Uint8Array>({
-    transform(chunk, controller) {
-      buffer += decoder.decode(chunk, { stream: true });
-
-      // Process complete lines (SSE is line-based)
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? ""; // Keep incomplete line in buffer
-
-      for (const line of lines) {
-        let processed = line;
-
-        // Check for thinking tags in the line
-        if (processed.includes("<thinking>")) {
-          insideThinking = true;
-        }
-
-        if (insideThinking) {
-          if (processed.includes("</thinking>")) {
-            // Remove everything up to and including </thinking>
-            processed = processed.replace(/<thinking>[\s\S]*?<\/thinking>/g, "");
-            insideThinking = false;
-          } else {
-            // Skip entire line — we're inside a thinking block
-            continue;
-          }
-        }
-
-        // Also strip any remaining thinking tags that fit on one line
-        processed = processed.replace(/<thinking>[\s\S]*?<\/thinking>/g, "");
-        // Strip orphaned opening/closing tags
-        processed = processed.replace(/<\/?thinking>/g, "");
-
-        if (processed.trim() || line === "") {
-          controller.enqueue(encoder.encode(processed + "\n"));
-        }
-      }
-    },
-    flush(controller) {
-      if (buffer) {
-        const cleaned = buffer
-          .replace(/<thinking>[\s\S]*?<\/thinking>/g, "")
-          .replace(/<\/?thinking>/g, "");
-        if (cleaned.trim()) {
-          controller.enqueue(encoder.encode(cleaned));
-        }
-      }
-    },
-  }).readable;
-}
-
 export const POST = async (req: NextRequest) => {
+  // Parse request to check if it's an info request
+  const cloned = req.clone();
+  let isInfoRequest = false;
+  try {
+    const body = await cloned.json();
+    isInfoRequest = body?.method === "info";
+  } catch {
+    // Not JSON, proceed normally
+  }
+
   const mastraAgents = MastraAgent.getLocalAgents({
     mastra,
     resourceId: "budgetAgent",
@@ -86,10 +36,50 @@ export const POST = async (req: NextRequest) => {
 
   const response = await handleRequest(req);
 
-  // If streaming, filter out <thinking> tags
-  if (response.body) {
-    const filteredBody = stripThinkingTags(response.body);
-    return new Response(filteredBody, {
+  // Only filter streaming responses (not /info JSON responses)
+  if (!isInfoRequest && response.body && response.headers.get("content-type")?.includes("text/event-stream")) {
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
+
+    const filteredStream = new ReadableStream({
+      async start(controller) {
+        const reader = response.body!.getReader();
+        let insideThinking = false;
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            let text = decoder.decode(value, { stream: true });
+
+            // Handle thinking tags
+            if (text.includes("<thinking>")) insideThinking = true;
+
+            if (insideThinking) {
+              if (text.includes("</thinking>")) {
+                text = text.replace(/<thinking>[\s\S]*?<\/thinking>/g, "");
+                insideThinking = false;
+              } else {
+                continue; // Skip chunks inside thinking
+              }
+            }
+
+            // Strip any remaining thinking tags
+            text = text.replace(/<thinking>[\s\S]*?<\/thinking>/g, "");
+            text = text.replace(/<\/?thinking>/g, "");
+
+            if (text) {
+              controller.enqueue(encoder.encode(text));
+            }
+          }
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(filteredStream, {
       status: response.status,
       headers: response.headers,
     });
