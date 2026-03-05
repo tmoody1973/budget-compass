@@ -35,11 +35,14 @@ function snakeToCamel(key: string): string {
   return key.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
 }
 
-/** Transform all keys in an object from snake_case to camelCase */
+/** Transform all keys in an object from snake_case to camelCase, stripping nulls */
 function transformKeys(obj: Record<string, unknown>): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj)) {
-    result[snakeToCamel(key)] = value;
+    // Convex treats null and undefined differently — strip nulls for optional fields
+    if (value !== null) {
+      result[snakeToCamel(key)] = value;
+    }
   }
   return result;
 }

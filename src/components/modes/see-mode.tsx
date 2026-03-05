@@ -26,7 +26,12 @@ export function SeeMode() {
       {
         name: "data",
         type: "object[]",
-        description: "Array of {label, value, color?} data points",
+        description: "Array of data points for the chart",
+        attributes: [
+          { name: "label", type: "string", description: "Data point label" },
+          { name: "value", type: "number", description: "Data point value" },
+          { name: "color", type: "string", description: "Optional color", required: false },
+        ],
       },
       {
         name: "xLabel",
@@ -74,7 +79,16 @@ export function SeeMode() {
     parameters: [
       { name: "title", type: "string" },
       { name: "description", type: "string" },
-      { name: "dataPoints", type: "object[]" },
+      {
+        name: "dataPoints",
+        type: "object[]",
+        description: "Data points for the infographic",
+        attributes: [
+          { name: "label", type: "string", description: "Label" },
+          { name: "value", type: "number", description: "Value" },
+          { name: "unit", type: "string", description: "Unit", required: false },
+        ],
+      },
       { name: "style", type: "string" },
     ],
     handler: async () => {

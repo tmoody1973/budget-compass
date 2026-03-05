@@ -33,6 +33,10 @@ export function HearMode() {
         name: "keyFacts",
         type: "object[]",
         description: "Key facts for visual display",
+        attributes: [
+          { name: "fact", type: "string", description: "Fact description" },
+          { name: "value", type: "string", description: "Fact value" },
+        ],
       },
     ],
     handler: async () => {
@@ -74,7 +78,12 @@ export function HearMode() {
       {
         name: "data",
         type: "object[]",
-        description: "Array of {label, value, color?} data points",
+        description: "Array of data points for the chart",
+        attributes: [
+          { name: "label", type: "string", description: "Data point label" },
+          { name: "value", type: "number", description: "Data point value" },
+          { name: "color", type: "string", description: "Optional color", required: false },
+        ],
       },
       {
         name: "xLabel",

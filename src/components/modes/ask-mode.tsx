@@ -20,7 +20,16 @@ export function AskMode() {
     parameters: [
       { name: "chartType", type: "string", description: "Type of chart: bar, line, pie, or treemap" },
       { name: "title", type: "string", description: "Chart title" },
-      { name: "data", type: "object[]", description: "Array of {label, value, color?} data points" },
+      {
+        name: "data",
+        type: "object[]",
+        description: "Array of data points for the chart",
+        attributes: [
+          { name: "label", type: "string", description: "Data point label" },
+          { name: "value", type: "number", description: "Data point value" },
+          { name: "color", type: "string", description: "Optional color", required: false },
+        ],
+      },
       { name: "xLabel", type: "string", description: "X-axis label", required: false },
       { name: "yLabel", type: "string", description: "Y-axis label", required: false },
       { name: "unit", type: "string", description: "Value unit ($ or %)", required: false },
