@@ -12,7 +12,7 @@ export const maxDuration = 60;
 export const POST = async (req: NextRequest) => {
   const mastraAgents = MastraAgent.getLocalAgents({
     mastra,
-    resourceId: "queryRouter",
+    resourceId: "budgetAgent",
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
