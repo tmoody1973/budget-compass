@@ -150,6 +150,55 @@
     "cultureAndRecreation": { "percent": 2, "label": "Culture & Recreation" },
     "reserves": { "percent": 3, "label": "Reserves" }
   },
+  "mpsOffices": [
+    { "name": "Schools", "budget": 882700000 },
+    { "name": "Operations", "budget": 301400000 },
+    { "name": "Academics", "budget": 146400000 },
+    { "name": "District Wide", "budget": 56500000 },
+    { "name": "Families & Community Engagement", "budget": 49300000 },
+    { "name": "Office of Schools", "budget": 31700000 },
+    { "name": "Human Resources", "budget": 27600000 },
+    { "name": "Pass Through - Private", "budget": 24600000 },
+    { "name": "Finance", "budget": 17000000 },
+    { "name": "Communications & School Performance", "budget": 2800000 },
+    { "name": "Accountability & Efficiency", "budget": 2500000 },
+    { "name": "Superintendent", "budget": 2300000 },
+    { "name": "Legal", "budget": 2200000 },
+    { "name": "Board Governance", "budget": 1600000 },
+    { "name": "Board of School Directors", "budget": 400000 }
+  ],
+  "mpsFundGroups": [
+    { "name": "School Operations Fund", "budget": 1212900000 },
+    { "name": "Grants & Categorical Aids", "budget": 175700000 },
+    { "name": "Nutrition Services", "budget": 62700000 },
+    { "name": "Milwaukee Recreation", "budget": 39400000 },
+    { "name": "Debt Service Fund", "budget": 27800000 },
+    { "name": "Capital & Deferred Maintenance Trust", "budget": 27800000 },
+    { "name": "Construction Fund", "budget": 2700000 }
+  ],
+  "mpsExpenditures": [
+    { "name": "Salaries", "budget": 626900000 },
+    { "name": "Purchased Services", "budget": 376600000 },
+    { "name": "Employee Benefits", "budget": 355900000 },
+    { "name": "Supplies & Materials", "budget": 87000000 },
+    { "name": "Other Objects", "budget": 63100000 },
+    { "name": "Other Wages", "budget": 29400000 },
+    { "name": "Equipment", "budget": 10000000 }
+  ],
+  "mpsTotalBudget": 1548971230,
+  "countyDepartments": [
+    { "name": "Health & Human Services", "budget": 398400000, "desc": "Includes $216M Behavioral Health Services" },
+    { "name": "Transportation & Public Works", "budget": 362900000, "desc": "Includes $155.7M MCTS" },
+    { "name": "Public Safety", "budget": 178000000, "desc": "Includes Sheriff ($75.1M, 708-709 FTEs)" },
+    { "name": "Parks, Recreation & Culture", "budget": 116900000 },
+    { "name": "Administration", "budget": 113200000 },
+    { "name": "Non-Departmental", "budget": 110300000 },
+    { "name": "Debt Service", "budget": 52000000 },
+    { "name": "Courts & Judiciary", "budget": 40100000 },
+    { "name": "General Government", "budget": 11400000 },
+    { "name": "Legislative & Executive", "budget": 2700000 }
+  ],
+  "countyTotalBudget": 1390000000,
   "serviceGroups": [
     {
       "name": "Public Safety",

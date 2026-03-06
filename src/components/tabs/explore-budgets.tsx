@@ -32,8 +32,8 @@ function fmtCompact(n: number): string {
 /* ------------------------------------------------------------------ */
 
 const CITY_TOTAL = 1_004_574_422;
-const MPS_TOTAL = 1_594_651_300;
-const COUNTY_TOTAL = 1_385_000_000;
+const MPS_TOTAL = (taxRatesData as any).mpsTotalBudget as number;
+const COUNTY_TOTAL = (taxRatesData as any).countyTotalBudget as number;
 const ALL_THREE_TOTAL = CITY_TOTAL + MPS_TOTAL + COUNTY_TOTAL;
 
 const JURISDICTION_COLORS: Record<string, string> = {
@@ -46,6 +46,12 @@ const JURISDICTION_RATES: Record<string, number> = {
   city: taxRatesData.jurisdictions.find((j) => j.id === "city")!.rate,
   mps: taxRatesData.jurisdictions.find((j) => j.id === "mps")!.rate,
   county: taxRatesData.jurisdictions.find((j) => j.id === "county")!.rate,
+};
+
+const JURISDICTION_TOTALS: Record<string, number> = {
+  city: CITY_TOTAL,
+  mps: MPS_TOTAL,
+  county: COUNTY_TOTAL,
 };
 
 /** City drill-down from serviceGroups in tax-rates-2026.json */
@@ -64,29 +70,43 @@ function getCityChildren() {
   });
 }
 
-/** MPS drill-down — simplified categories */
-const MPS_CHILDREN = [
-  { name: "Instruction & Support", value: 850_000_000 },
-  { name: "Operations & Maintenance", value: 280_000_000 },
-  { name: "Administration", value: 200_000_000 },
-  { name: "Other Programs", value: 264_651_300 },
-];
+/** MPS drill-down — real offices from tax-rates-2026.json */
+function getMpsChildren() {
+  return ((taxRatesData as any).mpsOffices as { name: string; budget: number }[]).map(
+    (o) => ({
+      name: o.name,
+      value: o.budget,
+      hasChildren: true,
+      groupName: o.name,
+    }),
+  );
+}
 
-/** County drill-down — functional areas */
-const COUNTY_CHILDREN = [
-  { name: "Health & Human Services", value: 398_400_000 },
-  { name: "Transportation", value: 284_100_000 },
-  { name: "General Government", value: 204_900_000 },
-  { name: "Courts & Judiciary", value: 115_500_000 },
-  { name: "Parks, Culture & Recreation", value: 107_800_000 },
-  { name: "Public Safety & Law Enforcement", value: 89_200_000 },
-  { name: "Land Use & Debt", value: 82_200_000 },
-  { name: "Administration", value: 54_700_000 },
-  { name: "Economic Development", value: 37_600_000 },
-  { name: "Legislative & Executive", value: 2_700_000 },
-];
+/** MPS Level 3: expenditure types for each office (shared across all offices) */
+function getMpsExpenditures() {
+  return ((taxRatesData as any).mpsExpenditures as { name: string; budget: number }[]).map(
+    (e) => ({
+      name: e.name,
+      value: e.budget,
+    }),
+  );
+}
 
-type DrillLevel = "root" | "jurisdiction" | "group";
+/** County drill-down — real departments from tax-rates-2026.json */
+function getCountyChildren() {
+  return (
+    (taxRatesData as any).countyDepartments as {
+      name: string;
+      budget: number;
+      desc?: string;
+    }[]
+  ).map((d) => ({
+    name: d.name,
+    value: d.budget,
+  }));
+}
+
+type DrillLevel = "root" | "jurisdiction" | "group" | "office";
 
 interface BreadcrumbItem {
   label: string;
@@ -111,12 +131,7 @@ export function ExploreBudgets() {
   /** Compute your personal tax share for a given budget amount in a jurisdiction */
   function yourShare(budgetAmount: number, jurisdictionId: string): number {
     const rate = JURISDICTION_RATES[jurisdictionId] ?? 0;
-    const totalBudget =
-      jurisdictionId === "city"
-        ? CITY_TOTAL
-        : jurisdictionId === "mps"
-          ? MPS_TOTAL
-          : COUNTY_TOTAL;
+    const totalBudget = JURISDICTION_TOTALS[jurisdictionId] ?? 1;
     const yourJurisdictionTax = (assessedValue / 1000) * rate;
     return (budgetAmount / totalBudget) * yourJurisdictionTax;
   }
@@ -151,7 +166,7 @@ export function ExploreBudgets() {
       const baseColor = JURISDICTION_COLORS[jid];
 
       if (jid === "city") {
-        return getCityChildren().map((g, i) => ({
+        return getCityChildren().map((g) => ({
           name: g.name,
           value: g.value,
           itemStyle: { color: g.color },
@@ -162,16 +177,18 @@ export function ExploreBudgets() {
       }
 
       if (jid === "mps") {
-        return MPS_CHILDREN.map((c, i) => ({
+        return getMpsChildren().map((c, i) => ({
           name: c.name,
           value: c.value,
-          itemStyle: { color: adjustColor(baseColor, i * 15) },
+          itemStyle: { color: adjustColor(baseColor, i * 12) },
           jurisdictionId: jid,
+          groupName: c.groupName,
+          hasChildren: c.hasChildren,
         }));
       }
 
       if (jid === "county") {
-        return COUNTY_CHILDREN.map((c, i) => ({
+        return getCountyChildren().map((c, i) => ({
           name: c.name,
           value: c.value,
           itemStyle: { color: adjustColor(baseColor, i * 10) },
@@ -180,7 +197,10 @@ export function ExploreBudgets() {
       }
     }
 
-    if (currentLevel.level === "group" && currentLevel.jurisdictionId === "city") {
+    if (
+      currentLevel.level === "group" &&
+      currentLevel.jurisdictionId === "city"
+    ) {
       const group = taxRatesData.serviceGroups.find(
         (g) => g.name === currentLevel.groupName,
       );
@@ -193,6 +213,20 @@ export function ExploreBudgets() {
           jurisdictionId: "city",
         }));
       }
+    }
+
+    // MPS Level 3: expenditure types within an office
+    if (
+      currentLevel.level === "office" &&
+      currentLevel.jurisdictionId === "mps"
+    ) {
+      const baseColor = JURISDICTION_COLORS.mps;
+      return getMpsExpenditures().map((e, i) => ({
+        name: e.name,
+        value: e.value,
+        itemStyle: { color: adjustColor(baseColor, i * 15) },
+        jurisdictionId: "mps",
+      }));
     }
 
     return [];
@@ -307,11 +341,14 @@ export function ExploreBudgets() {
       d.hasChildren &&
       d.groupName
     ) {
+      // City → service group, MPS → office
+      const nextLevel: DrillLevel =
+        currentLevel.jurisdictionId === "mps" ? "office" : "group";
       setDrillPath([
         ...drillPath,
         {
           label: d.groupName,
-          level: "group",
+          level: nextLevel,
           jurisdictionId: currentLevel.jurisdictionId,
           groupName: d.groupName,
         },
@@ -341,7 +378,7 @@ export function ExploreBudgets() {
         {drillPath.map((crumb, i) => (
           <span key={i} className="flex items-center">
             {i > 0 && (
-              <span className="mx-1 text-gray-400 font-bold">&gt;</span>
+              <span className="mx-1 font-bold text-gray-400">&gt;</span>
             )}
             {i < drillPath.length - 1 ? (
               <button
@@ -406,6 +443,12 @@ export function ExploreBudgets() {
         currentLevel.jurisdictionId === "city" && (
           <p className="text-center text-xs font-medium text-gray-500">
             Click a service group to see individual departments
+          </p>
+        )}
+      {currentLevel.level === "jurisdiction" &&
+        currentLevel.jurisdictionId === "mps" && (
+          <p className="text-center text-xs font-medium text-gray-500">
+            Click an office to see expenditure breakdown
           </p>
         )}
     </div>
