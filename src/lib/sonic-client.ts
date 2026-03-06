@@ -155,9 +155,23 @@ export class SonicClient {
       // Session ended — don't auto-disconnect, user may want to continue
     });
 
-    this.socket.on("sonic:error", (data: { message: string }) => {
-      console.error("[SonicClient] Server error:", data.message);
-      this.config.onError?.(data.message);
+    this.socket.on("sonic:error", (data: {
+      message?: string;
+      code?: string;
+      requestId?: string;
+      lastEvent?: { kind?: string } | null;
+    }) => {
+      const message = data?.message ?? "Unknown Sonic server error";
+      const details = [
+        data?.code ? `code=${data.code}` : "",
+        data?.requestId ? `requestId=${data.requestId}` : "",
+        data?.lastEvent?.kind ? `lastEvent=${data.lastEvent.kind}` : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+      const combined = details ? `${message} (${details})` : message;
+      console.error("[SonicClient] Server error:", combined, data);
+      this.config.onError?.(combined);
     });
 
     this.socket.on("disconnect", () => {

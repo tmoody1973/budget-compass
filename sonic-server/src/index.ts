@@ -41,47 +41,73 @@ import { TOOL_DEFINITIONS, executeTool } from "./tools.js";
 import { getSystemPrompt, getBudgetContext } from "./prompts.js";
 
 /* ------------------------------------------------------------------ */
-/* EventQueue — AsyncIterable for dynamic event pushing                 */
+/* EventChannel — async generator with push/close for bidi streaming    */
 /* ------------------------------------------------------------------ */
 
-class EventQueue {
-  private queue: Array<{ chunk: { bytes: Uint8Array } }> = [];
-  private resolver: ((value: IteratorResult<any>) => void) | null = null;
-  private closed = false;
+interface EventChannel {
+  iterable: AsyncGenerator<{ chunk: { bytes: Uint8Array } }>;
+  push: (encoded: { chunk: { bytes: Uint8Array } }) => void;
+  close: () => void;
+}
 
-  push(encoded: { chunk: { bytes: Uint8Array } }) {
-    if (this.resolver) {
-      const resolve = this.resolver;
-      this.resolver = null;
-      resolve({ done: false, value: encoded });
-    } else {
-      this.queue.push(encoded);
+interface EventTrace {
+  kind: string;
+  bytes: number;
+  preview: string;
+  ts: string;
+}
+
+function normalizeBase64Audio(input: unknown): string | null {
+  if (typeof input !== "string") return null;
+  const stripped = input
+    .replace(/^data:audio\/[^;]+;base64,/, "")
+    .replace(/\s+/g, "");
+  if (!stripped) return null;
+  if (stripped.length % 4 !== 0) return null;
+  if (/[^A-Za-z0-9+/=]/.test(stripped)) return null;
+
+  try {
+    // Canonicalize and verify it's decodable base64 before forwarding to Bedrock.
+    return Buffer.from(stripped, "base64").toString("base64");
+  } catch {
+    return null;
+  }
+}
+
+function createEventChannel(): EventChannel {
+  const queue: Array<{ chunk: { bytes: Uint8Array } }> = [];
+  let resolver: (() => void) | null = null;
+  let closed = false;
+
+  async function* generator() {
+    while (true) {
+      while (queue.length > 0) {
+        yield queue.shift()!;
+      }
+      if (closed) return;
+      await new Promise<void>((r) => { resolver = r; });
     }
   }
 
-  close() {
-    this.closed = true;
-    if (this.resolver) {
-      this.resolver({ done: true, value: undefined });
-      this.resolver = null;
+  function push(encoded: { chunk: { bytes: Uint8Array } }) {
+    queue.push(encoded);
+    if (resolver) {
+      const r = resolver;
+      resolver = null;
+      r();
     }
   }
 
-  [Symbol.asyncIterator]() {
-    return {
-      next: (): Promise<IteratorResult<any>> => {
-        if (this.queue.length > 0) {
-          return Promise.resolve({ done: false, value: this.queue.shift()! });
-        }
-        if (this.closed) {
-          return Promise.resolve({ done: true, value: undefined });
-        }
-        return new Promise((resolve) => {
-          this.resolver = resolve;
-        });
-      },
-    };
+  function close() {
+    closed = true;
+    if (resolver) {
+      const r = resolver;
+      resolver = null;
+      r();
+    }
   }
+
+  return { iterable: generator(), push, close };
 }
 
 /* ------------------------------------------------------------------ */
@@ -131,10 +157,30 @@ function createBedrockClient() {
 io.on("connection", (socket) => {
   console.log(`[sonic] Client connected: ${socket.id}`);
 
-  let eventQueue: EventQueue | null = null;
+  let channel: EventChannel | null = null;
   let isStreaming = false;
   let promptName = "";
   let audioContentName = "";
+  const recentEvents: EventTrace[] = [];
+
+  const rememberEvent = (kind: string, event: Record<string, unknown>) => {
+    const serialized = JSON.stringify(event);
+    recentEvents.push({
+      kind,
+      bytes: Buffer.byteLength(serialized, "utf8"),
+      preview: serialized.slice(0, 220),
+      ts: new Date().toISOString(),
+    });
+    if (recentEvents.length > 12) {
+      recentEvents.shift();
+    }
+  };
+
+  const pushEvent = (kind: string, evt: Record<string, unknown>) => {
+    if (!channel) return;
+    rememberEvent(kind, evt);
+    channel.push(encodeEvent(evt));
+  };
 
   socket.on("sonic:start", async (config: {
     persona?: string;
@@ -151,24 +197,22 @@ io.on("connection", (socket) => {
     console.log(`[sonic] Starting session for ${socket.id}, persona: ${persona}, voice: ${voiceId}`);
 
     const bedrockClient = createBedrockClient();
-    eventQueue = new EventQueue();
+    channel = createEventChannel();
     isStreaming = true;
-
-    // Helper: encode and push an event to the queue
-    const pushEvent = (evt: Record<string, unknown>) => eventQueue!.push(encodeEvent(evt));
 
     // Queue initial event sequence BEFORE sending the command
     // 1. Session start
-    pushEvent(sessionStartEvent());
+    pushEvent("sessionStart", sessionStartEvent());
 
     // 2. Prompt start with tools + voice config
     pushEvent(
+      "promptStart",
       promptStartEvent(promptName, TOOL_DEFINITIONS, { voiceId })
     );
 
     // 3. System prompt
     for (const evt of systemPromptEvents(promptName, getSystemPrompt(persona))) {
-      pushEvent(evt);
+      pushEvent("systemPrompt", evt);
     }
 
     // 4. Budget context (if provided)
@@ -181,19 +225,19 @@ io.on("connection", (socket) => {
           jurisdictions: config.jurisdictions ?? [],
         })
       )) {
-        pushEvent(evt);
+        pushEvent("context", evt);
       }
     }
 
     // 5. Start audio input stream
-    pushEvent(audioContentStart(promptName, audioContentName));
+    pushEvent("audioContentStart", audioContentStart(promptName, audioContentName));
 
     socket.emit("sonic:ready");
 
     try {
       const command = new InvokeModelWithBidirectionalStreamCommand({
         modelId: "amazon.nova-sonic-v1:0",
-        body: eventQueue as any, // AsyncIterable<{chunk:{bytes:Uint8Array}}>
+        body: channel.iterable as any, // AsyncGenerator<{chunk:{bytes:Uint8Array}}>
       });
 
       const response = await bedrockClient.send(command);
@@ -277,9 +321,9 @@ io.on("connection", (socket) => {
               console.log(`[sonic] Tool result: ${result.length} chars`);
 
               // Send tool result back into the stream
-              if (eventQueue) {
+              if (channel) {
                 for (const evt of toolResultEvents(promptName, currentToolUseId, result)) {
-                  eventQueue.push(encodeEvent(evt));
+                  pushEvent("toolResult", evt);
                 }
               }
 
@@ -313,39 +357,55 @@ io.on("connection", (socket) => {
       socket.emit("sonic:end");
 
     } catch (err: any) {
-      console.error("[sonic] Session error:", err?.message);
-      socket.emit("sonic:error", { message: err?.message ?? "Session error" });
+      const details = {
+        name: err?.name,
+        message: err?.message,
+        metadata: err?.$metadata,
+        requestId: err?.$metadata?.requestId,
+        statusCode: err?.$metadata?.httpStatusCode,
+        lastEvents: recentEvents,
+      };
+      console.error("[sonic] Session error:", JSON.stringify(details));
+      socket.emit("sonic:error", {
+        message: err?.message ?? "Session error",
+        code: err?.name ?? "UnknownError",
+        requestId: err?.$metadata?.requestId,
+        lastEvent: recentEvents[recentEvents.length - 1] ?? null,
+      });
     } finally {
       isStreaming = false;
-      eventQueue?.close();
-      eventQueue = null;
+      channel?.close();
+      channel = null;
     }
   });
 
-  // Forward browser audio to Bedrock via EventQueue
+  // Forward browser audio to Bedrock via EventChannel
   socket.on("sonic:audio", (data: { audio: string }) => {
-    if (!isStreaming || !eventQueue) return;
-    eventQueue.push(
-      encodeEvent(audioInputEvent(promptName, audioContentName, data.audio))
-    );
+    if (!isStreaming || !channel) return;
+    const normalizedAudio = normalizeBase64Audio(data?.audio);
+    if (!normalizedAudio) {
+      console.warn("[sonic] Dropping invalid audio chunk (non-base64 or empty)");
+      return;
+    }
+    pushEvent("audioInput", audioInputEvent(promptName, audioContentName, normalizedAudio));
   });
 
   // Clean shutdown
   socket.on("sonic:stop", () => {
     console.log(`[sonic] Stopping session for ${socket.id}`);
     isStreaming = false;
-    if (eventQueue) {
+    if (channel) {
       try {
         for (const evt of closeEvents(promptName, audioContentName)) {
-          eventQueue.push(encodeEvent(evt));
+          pushEvent("close", evt);
         }
       } catch {
         // best-effort
       }
-      // Give a brief moment for close events to flush, then close the queue
+      // Give a brief moment for close events to flush, then close the channel
       setTimeout(() => {
-        eventQueue?.close();
-        eventQueue = null;
+        channel?.close();
+        channel = null;
       }, 500);
     }
     socket.emit("sonic:end");
@@ -354,8 +414,8 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(`[sonic] Client disconnected: ${socket.id}`);
     isStreaming = false;
-    eventQueue?.close();
-    eventQueue = null;
+    channel?.close();
+    channel = null;
   });
 });
 
