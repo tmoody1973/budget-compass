@@ -89,7 +89,7 @@ class EventQueue {
 /* Express + Socket.IO setup                                            */
 /* ------------------------------------------------------------------ */
 
-const PORT = parseInt(process.env.SONIC_PORT ?? "3001", 10);
+const PORT = parseInt(process.env.PORT ?? process.env.SONIC_PORT ?? "3001", 10);
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://localhost:3001",

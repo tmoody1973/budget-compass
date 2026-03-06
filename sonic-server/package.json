@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "node --loader tsx src/index.ts"
+    "start": "node --import tsx src/index.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1003.0",
@@ -14,13 +14,13 @@
     "convex": "^1.32.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.2",
     "@types/node": "^20",
-    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
