@@ -409,8 +409,13 @@ export function TaxReceipt() {
     sonicClientRef.current = client;
     try {
       await client.connect();
-    } catch {
-      setTalkError("Voice server unavailable. Use Brief me for an AI-narrated summary.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("Permission") || msg.includes("NotAllowed") || msg.includes("getUserMedia")) {
+        setTalkError("Microphone access denied. Please allow mic access and try again.");
+      } else {
+        setTalkError("Voice server unavailable. Use Brief me for an AI-narrated summary.");
+      }
     }
   }, [taxTalkState, SONIC_URL, persona, assessedValue, totalTax, jurisdictions]);
 
