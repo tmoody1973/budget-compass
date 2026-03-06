@@ -155,18 +155,21 @@ io.on("connection", (socket) => {
     eventQueue = new EventQueue();
     isStreaming = true;
 
+    // Helper: encode and push an event to the queue
+    const pushEvent = (evt: Record<string, unknown>) => eventQueue!.push(encodeEvent(evt));
+
     // Queue initial event sequence BEFORE sending the command
     // 1. Session start
-    eventQueue.push(sessionStartEvent());
+    pushEvent(sessionStartEvent());
 
     // 2. Prompt start with tools + voice config
-    eventQueue.push(
+    pushEvent(
       promptStartEvent(promptName, TOOL_DEFINITIONS, { voiceId })
     );
 
     // 3. System prompt
     for (const evt of systemPromptEvents(promptName, getSystemPrompt(persona))) {
-      eventQueue.push(evt);
+      pushEvent(evt);
     }
 
     // 4. Budget context (if provided)
@@ -179,12 +182,12 @@ io.on("connection", (socket) => {
           jurisdictions: config.jurisdictions ?? [],
         })
       )) {
-        eventQueue.push(evt);
+        pushEvent(evt);
       }
     }
 
     // 5. Start audio input stream
-    eventQueue.push(audioContentStart(promptName, audioContentName));
+    pushEvent(audioContentStart(promptName, audioContentName));
 
     socket.emit("sonic:ready");
 
@@ -277,7 +280,7 @@ io.on("connection", (socket) => {
               // Send tool result back into the stream
               if (eventQueue) {
                 for (const evt of toolResultEvents(promptName, currentToolUseId, result)) {
-                  eventQueue.push(evt);
+                  eventQueue.push(encodeEvent(evt));
                 }
               }
 
@@ -324,7 +327,7 @@ io.on("connection", (socket) => {
   socket.on("sonic:audio", (data: { audio: string }) => {
     if (!isStreaming || !eventQueue) return;
     eventQueue.push(
-      audioInputEvent(promptName, audioContentName, data.audio)
+      encodeEvent(audioInputEvent(promptName, audioContentName, data.audio))
     );
   });
 
@@ -335,7 +338,7 @@ io.on("connection", (socket) => {
     if (eventQueue) {
       try {
         for (const evt of closeEvents(promptName, audioContentName)) {
-          eventQueue.push(evt);
+          eventQueue.push(encodeEvent(evt));
         }
       } catch {
         // best-effort
