@@ -162,8 +162,6 @@ export function audioContentStart(
           sampleRateHertz: 16000,
           sampleSizeBits: 16,
           channelCount: 1,
-          audioType: "SPEECH",
-          encoding: "base64",
         },
       },
     },
