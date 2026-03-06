@@ -49,8 +49,7 @@ class EventQueue {
   private resolver: ((value: IteratorResult<any>) => void) | null = null;
   private closed = false;
 
-  push(event: Record<string, unknown>) {
-    const encoded = encodeEvent(event);
+  push(encoded: { chunk: { bytes: Uint8Array } }) {
     if (this.resolver) {
       const resolve = this.resolver;
       this.resolver = null;
