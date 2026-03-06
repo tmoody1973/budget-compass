@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useBudget } from "@/contexts/budget-context";
 import { useTranslation } from "@/lib/i18n";
-import { lookupAddress } from "@/lib/mprop";
+import { lookupAddress, searchAddresses, type MpropProperty } from "@/lib/mprop";
 
 const PRESETS = [
   { label: "$100K", value: 100000 },
@@ -21,10 +21,78 @@ export function Landing() {
   const [error, setError] = useState("");
   const [selectedPreset, setSelectedPreset] = useState<number | null>(166000);
 
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState<MpropProperty[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Debounced search for suggestions
+  const fetchSuggestions = useCallback((query: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (query.trim().length < 4) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    setIsLoadingSuggestions(true);
+    debounceRef.current = setTimeout(async () => {
+      const results = await searchAddresses(query);
+      setSuggestions(results);
+      setShowSuggestions(results.length > 0);
+      setIsLoadingSuggestions(false);
+    }, 300);
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // Close dropdown on Escape
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setShowSuggestions(false);
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setAddressInput(val);
+    setError("");
+    fetchSuggestions(val);
+  };
+
+  const handleSelectSuggestion = (property: MpropProperty) => {
+    setAssessedValue(property.assessedValue);
+    setPropertyDetails({
+      address: property.address,
+      aldermanicDistrict: property.aldermanicDistrict,
+      policeDistrict: property.policeDistrict,
+      fireStation: property.fireStation,
+    });
+    setAddressInput(property.address);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    setIsLanded(true);
+  };
+
   const handleAddressSearch = async () => {
     if (!addressInput.trim()) return;
     setIsSearching(true);
     setError("");
+    setShowSuggestions(false);
 
     const result = await lookupAddress(addressInput);
     if (result && result.assessedValue > 0) {
@@ -67,7 +135,7 @@ export function Landing() {
         </div>
 
         {/* Address search */}
-        <div className="mb-4">
+        <div className="relative mb-4" ref={dropdownRef}>
           <label className="mb-1 block text-xs font-semibold text-gray-500">
             {t("landing.addressPlaceholder")}
           </label>
@@ -75,8 +143,13 @@ export function Landing() {
             <input
               type="text"
               value={addressInput}
-              onChange={(e) => setAddressInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddressSearch()}
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setShowSuggestions(false);
+                  handleAddressSearch();
+                }
+              }}
               placeholder="123 N Water St"
               className="flex-1 rounded-lg border-2 border-mke-dark px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-mke-blue"
             />
@@ -88,6 +161,33 @@ export function Landing() {
               {isSearching ? "..." : "Look Up"}
             </button>
           </div>
+
+          {/* Autocomplete dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-lg border-2 border-mke-dark bg-white shadow-[3px_3px_0px_0px_#1A1A2E]">
+              {suggestions.map((s, i) => (
+                <button
+                  key={`${s.address}-${i}`}
+                  onClick={() => handleSelectSuggestion(s)}
+                  className="flex w-full items-center justify-between px-3 py-2.5 text-left transition-colors hover:bg-mke-cream"
+                >
+                  <span className="text-sm font-medium text-gray-800">
+                    {s.address}
+                  </span>
+                  <span className="ml-2 shrink-0 text-xs font-bold text-mke-blue">
+                    ${s.assessedValue.toLocaleString()}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {isLoadingSuggestions && addressInput.trim().length >= 4 && !showSuggestions && (
+            <div className="absolute left-0 right-0 top-full z-30 mt-1 rounded-lg border-2 border-gray-200 bg-white px-3 py-2 text-xs text-gray-400">
+              Searching...
+            </div>
+          )}
+
           {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
         </div>
 

@@ -2,7 +2,11 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import ReactECharts from "echarts-for-react";
+import { AnimatePresence } from "framer-motion";
 import { useBudget } from "@/contexts/budget-context";
+import { SonicClient, type SonicState } from "@/lib/sonic-client";
+import { SonicVisualizer } from "../sonic-visualizer";
+import { ExpandableCard } from "../expandable-card";
 import taxRatesData from "../../../data/tax-rates-2026.json";
 
 /* ------------------------------------------------------------------ */
@@ -365,6 +369,49 @@ export function TaxReceipt() {
   const [storyText, setStoryText] = useState<string>("");
   const [isPlaying, setIsPlaying] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const sonicClientRef = useRef<SonicClient | null>(null);
+  const [taxTalkState, setTaxTalkState] = useState<SonicState>("idle");
+  const [taxTalkAmplitude, setTaxTalkAmplitude] = useState(0);
+  const SONIC_URL = process.env.NEXT_PUBLIC_SONIC_URL ?? "http://localhost:3001";
+
+  const handleTalkAboutTaxes = useCallback(async () => {
+    if (taxTalkState !== "idle") {
+      // Disconnect
+      sonicClientRef.current?.disconnect();
+      sonicClientRef.current = null;
+      setTaxTalkState("idle");
+      return;
+    }
+
+    const client = new SonicClient({
+      sonicUrl: SONIC_URL,
+      persona: persona || "citizen",
+      assessedValue,
+      totalTax,
+      jurisdictions: jurisdictions.map((j: any) => ({
+        shortName: j.shortName,
+        yourShare: j.yourShare,
+        pct: j.pct,
+        rate: j.rate,
+      })),
+      onStateChange: setTaxTalkState,
+      onTranscript: () => {},
+      onToolUse: () => {},
+      onAmplitude: setTaxTalkAmplitude,
+      onError: () => {
+        setTaxTalkState("idle");
+        // Fallback to Web Speech API
+        handleBriefMe();
+      },
+    });
+
+    sonicClientRef.current = client;
+    try {
+      await client.connect();
+    } catch {
+      handleBriefMe(); // fallback
+    }
+  }, [taxTalkState, SONIC_URL, persona, assessedValue, totalTax, jurisdictions]);
 
   const handleBriefMe = useCallback(() => {
     if (isPlaying) {
@@ -388,6 +435,7 @@ export function TaxReceipt() {
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();
+      sonicClientRef.current?.disconnect();
     };
   }, []);
 
@@ -480,8 +528,24 @@ export function TaxReceipt() {
             </div>
             <div className="flex items-center gap-3">
               <button
+                onClick={handleTalkAboutTaxes}
+                className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20"
+              >
+                {taxTalkState !== "idle" ? (
+                  <>
+                    <span className="inline-block h-2 w-2 rounded-full bg-green-400" />
+                    Live &mdash; tap to end
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm">{"\ud83c\udf99\ufe0f"}</span> Talk about my taxes
+                  </>
+                )}
+              </button>
+              <button
                 onClick={handleBriefMe}
                 className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20"
+                title="Text-to-speech fallback"
               >
                 {isPlaying ? (
                   <>
@@ -592,372 +656,381 @@ export function TaxReceipt() {
         </div>
 
         {/* ---- City Detail (2 col) ---- */}
-        <div
-          className={`${cardBase} col-span-1 ${bgTints.city} overflow-hidden md:col-span-2`}
-        >
-          <button
-            onClick={() =>
+        <div className="col-span-1 md:col-span-2">
+          <ExpandableCard
+            id="city"
+            isExpanded={expandedJurisdiction === "city"}
+            onToggle={() =>
               setExpandedJurisdiction(
                 expandedJurisdiction === "city" ? null : "city",
               )
             }
-            className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-blue-100/40"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-xl">🏛️</span>
-              <div>
-                <div className="text-sm font-bold text-gray-900">
-                  City of Milwaukee Detail
-                </div>
-                <div className="text-[10px] text-gray-400">
-                  {taxRatesData.serviceGroups.flatMap((g) => g.departments).length}{" "}
-                  departments across {taxRatesData.serviceGroups.length} service
-                  areas
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-blue-600">
-                {fmt(cityTax)}
-              </span>
-              <span
-                className="text-sm text-blue-600 transition-transform duration-200"
-                style={{
-                  transform:
-                    expandedJurisdiction === "city"
-                      ? "rotate(180deg)"
-                      : "rotate(0)",
-                }}
+            accentColor="#2563eb"
+            preview={
+              <div
+                className={`${cardBase} ${bgTints.city} flex items-center justify-between px-4 py-3 transition-colors hover:bg-blue-100/40`}
               >
-                &#x25BE;
-              </span>
-            </div>
-          </button>
-
-          {expandedJurisdiction === "city" && (
-            <div className="border-t border-gray-200 px-3 pb-4 pt-3">
-              {/* Toggle: services vs sections */}
-              <div className="mb-3 flex gap-1 rounded-lg bg-gray-100 p-0.5">
-                {(
-                  [
-                    { id: "services", label: "By Service Area" },
-                    { id: "sections", label: "By Budget Section" },
-                  ] as const
-                ).map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setCityView(t.id)}
-                    className={`flex-1 rounded-md py-1.5 text-[11px] font-semibold transition-colors ${
-                      cityView === t.id
-                        ? "bg-white text-blue-800 shadow-sm"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* --- BY SERVICE AREA --- */}
-              {cityView === "services" && (
-                <div className="space-y-1.5">
-                  {groups.map((g) => {
-                    const isGroupOpen = expandedGroup === g.name;
-                    return (
-                      <div
-                        key={g.name}
-                        className="overflow-hidden rounded-lg border border-gray-200"
-                      >
-                        <button
-                          onClick={() =>
-                            setExpandedGroup(isGroupOpen ? null : g.name)
-                          }
-                          className="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-gray-50"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-base">{g.icon}</span>
-                            <div>
-                              <div className="text-xs font-bold text-gray-900">
-                                {g.name}
-                              </div>
-                              <div className="text-[9px] text-gray-400">
-                                {g.depts.length} depts &middot;{" "}
-                                {g.pctOfGCP.toFixed(0)}% of city operations
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className="text-sm font-bold"
-                              style={{ color: g.color }}
-                            >
-                              {fmt(g.yourShare)}
-                            </span>
-                            <span
-                              className="text-xs transition-transform duration-200"
-                              style={{
-                                color: g.color,
-                                transform: isGroupOpen
-                                  ? "rotate(180deg)"
-                                  : "rotate(0)",
-                              }}
-                            >
-                              &#x25BE;
-                            </span>
-                          </div>
-                        </button>
-
-                        {isGroupOpen && (
-                          <div className="px-3 pb-3">
-                            {g.depts.map((d, i) => {
-                              const maxShare = g.depts[0].yourShare;
-                              const barW =
-                                maxShare > 0
-                                  ? Math.max(
-                                      3,
-                                      (d.yourShare / maxShare) * 100,
-                                    )
-                                  : 0;
-                              return (
-                                <div
-                                  key={d.name}
-                                  className={`py-1.5 ${i > 0 ? "border-t border-gray-100" : ""}`}
-                                >
-                                  <div className="flex items-start justify-between gap-2">
-                                    <span className="text-[11px] font-semibold text-gray-800">
-                                      {d.name}
-                                    </span>
-                                    <div className="shrink-0 text-right">
-                                      <div className="text-xs font-bold text-gray-900">
-                                        {fmt(d.yourShare)}
-                                      </div>
-                                      <div className="text-[8px] text-gray-400">
-                                        {fmtCompact(d.budget)} budget
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="mt-1 h-[3px] overflow-hidden rounded-full bg-gray-100">
-                                    <div
-                                      className="h-full rounded-full transition-all duration-300"
-                                      style={{
-                                        width: `${barW}%`,
-                                        backgroundColor: g.color,
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {/* Other city obligations */}
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                    <div className="mb-2 text-[11px] font-bold text-gray-600">
-                      Other City Obligations
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{"\ud83c\udfdb\ufe0f"}</span>
+                  <div>
+                    <div className="text-sm font-bold text-gray-900">
+                      City of Milwaukee Detail
                     </div>
-                    {taxRatesData.cityBudgetSections
-                      .filter((s) => s.id !== "gcp")
-                      .map((s) => {
-                        const sectionShare = s.levy / totalCityLevy;
-                        const yourShare = cityTax * sectionShare;
-                        return (
-                          <div
-                            key={s.id}
-                            className="flex justify-between py-1 text-[11px]"
-                          >
-                            <span className="text-gray-500">{s.name}</span>
-                            <span className="font-semibold">
-                              {fmt(yourShare)}
-                            </span>
-                          </div>
-                        );
-                      })}
+                    <div className="text-[10px] text-gray-400">
+                      {taxRatesData.serviceGroups.flatMap((g) => g.departments).length}{" "}
+                      departments across {taxRatesData.serviceGroups.length} service
+                      areas
+                    </div>
                   </div>
                 </div>
-              )}
+                <span className="text-lg font-bold text-blue-600">
+                  {fmt(cityTax)}
+                </span>
+              </div>
+            }
+            detail={
+              <div>
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="text-2xl">{"\ud83c\udfdb\ufe0f"}</span>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">
+                      City of Milwaukee Detail
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Your share: <span className="font-bold text-blue-600">{fmt(cityTax)}</span>
+                    </div>
+                  </div>
+                </div>
 
-              {/* --- BY BUDGET SECTION --- */}
-              {cityView === "sections" && (
-                <div>
-                  {taxRatesData.cityBudgetSections.map((s) => {
-                    const sectionShare = s.levy / totalCityLevy;
-                    const yourShare = cityTax * sectionShare;
-                    return (
-                      <div
-                        key={s.id}
-                        className="flex items-center justify-between border-b border-gray-100 py-2"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="inline-block h-2 w-2 shrink-0 rounded-sm"
-                            style={{ backgroundColor: s.color }}
-                          />
-                          <div>
-                            <div className="text-xs font-semibold">
-                              {s.name}
+                {/* Toggle: services vs sections */}
+                <div className="mb-3 flex gap-1 rounded-lg bg-gray-100 p-0.5">
+                  {(
+                    [
+                      { id: "services", label: "By Service Area" },
+                      { id: "sections", label: "By Budget Section" },
+                    ] as const
+                  ).map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setCityView(t.id)}
+                      className={`flex-1 rounded-md py-1.5 text-[11px] font-semibold transition-colors ${
+                        cityView === t.id
+                          ? "bg-white text-blue-800 shadow-sm"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* --- BY SERVICE AREA --- */}
+                {cityView === "services" && (
+                  <div className="space-y-1.5">
+                    {groups.map((g) => {
+                      const isGroupOpen = expandedGroup === g.name;
+                      return (
+                        <div
+                          key={g.name}
+                          className="overflow-hidden rounded-lg border border-gray-200"
+                        >
+                          <button
+                            onClick={() =>
+                              setExpandedGroup(isGroupOpen ? null : g.name)
+                            }
+                            className="flex w-full items-center justify-between px-3 py-2.5 text-left hover:bg-gray-50"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-base">{g.icon}</span>
+                              <div>
+                                <div className="text-xs font-bold text-gray-900">
+                                  {g.name}
+                                </div>
+                                <div className="text-[9px] text-gray-400">
+                                  {g.depts.length} depts &middot;{" "}
+                                  {g.pctOfGCP.toFixed(0)}% of city operations
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-[9px] text-gray-400">
-                              {fmtCompact(s.levy)} levy &middot;{" "}
-                              {(sectionShare * 100).toFixed(1)}%
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className="text-sm font-bold"
+                                style={{ color: g.color }}
+                              >
+                                {fmt(g.yourShare)}
+                              </span>
+                              <span
+                                className="text-xs transition-transform duration-200"
+                                style={{
+                                  color: g.color,
+                                  transform: isGroupOpen
+                                    ? "rotate(180deg)"
+                                    : "rotate(0)",
+                                }}
+                              >
+                                &#x25BE;
+                              </span>
+                            </div>
+                          </button>
+
+                          {isGroupOpen && (
+                            <div className="px-3 pb-3">
+                              {g.depts.map((d, i) => {
+                                const maxShare = g.depts[0].yourShare;
+                                const barW =
+                                  maxShare > 0
+                                    ? Math.max(
+                                        3,
+                                        (d.yourShare / maxShare) * 100,
+                                      )
+                                    : 0;
+                                return (
+                                  <div
+                                    key={d.name}
+                                    className={`py-1.5 ${i > 0 ? "border-t border-gray-100" : ""}`}
+                                  >
+                                    <div className="flex items-start justify-between gap-2">
+                                      <span className="text-[11px] font-semibold text-gray-800">
+                                        {d.name}
+                                      </span>
+                                      <div className="shrink-0 text-right">
+                                        <div className="text-xs font-bold text-gray-900">
+                                          {fmt(d.yourShare)}
+                                        </div>
+                                        <div className="text-[8px] text-gray-400">
+                                          {fmtCompact(d.budget)} budget
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="mt-1 h-[3px] overflow-hidden rounded-full bg-gray-100">
+                                      <div
+                                        className="h-full rounded-full transition-all duration-300"
+                                        style={{
+                                          width: `${barW}%`,
+                                          backgroundColor: g.color,
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Other city obligations */}
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      <div className="mb-2 text-[11px] font-bold text-gray-600">
+                        Other City Obligations
+                      </div>
+                      {taxRatesData.cityBudgetSections
+                        .filter((s) => s.id !== "gcp")
+                        .map((s) => {
+                          const sectionShare = s.levy / totalCityLevy;
+                          const yourShare = cityTax * sectionShare;
+                          return (
+                            <div
+                              key={s.id}
+                              className="flex justify-between py-1 text-[11px]"
+                            >
+                              <span className="text-gray-500">{s.name}</span>
+                              <span className="font-semibold">
+                                {fmt(yourShare)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+
+                {/* --- BY BUDGET SECTION --- */}
+                {cityView === "sections" && (
+                  <div>
+                    {taxRatesData.cityBudgetSections.map((s) => {
+                      const sectionShare = s.levy / totalCityLevy;
+                      const yourShare = cityTax * sectionShare;
+                      return (
+                        <div
+                          key={s.id}
+                          className="flex items-center justify-between border-b border-gray-100 py-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="inline-block h-2 w-2 shrink-0 rounded-sm"
+                              style={{ backgroundColor: s.color }}
+                            />
+                            <div>
+                              <div className="text-xs font-semibold">
+                                {s.name}
+                              </div>
+                              <div className="text-[9px] text-gray-400">
+                                {fmtCompact(s.levy)} levy &middot;{" "}
+                                {(sectionShare * 100).toFixed(1)}%
+                              </div>
                             </div>
                           </div>
+                          <div className="text-[13px] font-bold">
+                            {fmt(yourShare)}
+                          </div>
                         </div>
-                        <div className="text-[13px] font-bold">
-                          {fmt(yourShare)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            }
+          />
         </div>
 
         {/* ---- MPS Detail (1 col) ---- */}
-        <div
-          className={`${cardBase} col-span-1 ${bgTints.mps} overflow-hidden`}
-        >
-          <button
-            onClick={() =>
+        <div className="col-span-1">
+          <ExpandableCard
+            id="mps"
+            isExpanded={expandedJurisdiction === "mps"}
+            onToggle={() =>
               setExpandedJurisdiction(
                 expandedJurisdiction === "mps" ? null : "mps",
               )
             }
-            className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-rose-100/40"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-xl">🎓</span>
-              <div>
-                <div className="text-sm font-bold text-gray-900">
-                  MPS Detail
-                </div>
-                <div className="text-[10px] text-gray-400">
-                  15 offices &middot; 7 fund groups
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-rose-600">
-                {fmt(mpsTax)}
-              </span>
-              <span
-                className="text-sm text-rose-600 transition-transform duration-200"
-                style={{
-                  transform:
-                    expandedJurisdiction === "mps"
-                      ? "rotate(180deg)"
-                      : "rotate(0)",
-                }}
+            accentColor="#e11d48"
+            preview={
+              <div
+                className={`${cardBase} ${bgTints.mps} flex items-center justify-between px-4 py-3 transition-colors hover:bg-rose-100/40`}
               >
-                &#x25BE;
-              </span>
-            </div>
-          </button>
-
-          {expandedJurisdiction === "mps" && (
-            <div className="border-t border-gray-200 px-3 pb-4 pt-3">
-              {/* Toggle: offices vs fund groups */}
-              <div className="mb-3 flex gap-1 rounded-lg bg-gray-100 p-0.5">
-                {(
-                  [
-                    { id: "offices", label: "By Office" },
-                    { id: "funds", label: "By Fund Group" },
-                  ] as const
-                ).map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setMpsView(t.id)}
-                    className={`flex-1 rounded-md py-1.5 text-[11px] font-semibold transition-colors ${
-                      mpsView === t.id
-                        ? "bg-white text-rose-800 shadow-sm"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{"\ud83c\udf93"}</span>
+                  <div>
+                    <div className="text-sm font-bold text-gray-900">
+                      MPS Detail
+                    </div>
+                    <div className="text-[10px] text-gray-400">
+                      15 offices &middot; 7 fund groups
+                    </div>
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-rose-600">
+                  {fmt(mpsTax)}
+                </span>
               </div>
+            }
+            detail={
+              <div>
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="text-2xl">{"\ud83c\udf93"}</span>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">
+                      MPS Detail
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Your share: <span className="font-bold text-rose-600">{fmt(mpsTax)}</span>
+                    </div>
+                  </div>
+                </div>
 
-              {mpsView === "offices" && (
-                <DepartmentRows
-                  items={(taxRatesData as any).mpsOffices}
-                  color="#e11d48"
-                  total={MPS_OFFICE_TOTAL}
-                  yourTax={mpsTax}
-                  jurisdiction="Milwaukee Public Schools"
-                />
-              )}
+                {/* Toggle: offices vs fund groups */}
+                <div className="mb-3 flex gap-1 rounded-lg bg-gray-100 p-0.5">
+                  {(
+                    [
+                      { id: "offices", label: "By Office" },
+                      { id: "funds", label: "By Fund Group" },
+                    ] as const
+                  ).map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setMpsView(t.id)}
+                      className={`flex-1 rounded-md py-1.5 text-[11px] font-semibold transition-colors ${
+                        mpsView === t.id
+                          ? "bg-white text-rose-800 shadow-sm"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
 
-              {mpsView === "funds" && (
-                <DepartmentRows
-                  items={(taxRatesData as any).mpsFundGroups}
-                  color="#e11d48"
-                  total={MPS_FUND_TOTAL}
-                  yourTax={mpsTax}
-                  jurisdiction="Milwaukee Public Schools"
-                />
-              )}
-            </div>
-          )}
+                {mpsView === "offices" && (
+                  <DepartmentRows
+                    items={(taxRatesData as any).mpsOffices}
+                    color="#e11d48"
+                    total={MPS_OFFICE_TOTAL}
+                    yourTax={mpsTax}
+                    jurisdiction="Milwaukee Public Schools"
+                  />
+                )}
+
+                {mpsView === "funds" && (
+                  <DepartmentRows
+                    items={(taxRatesData as any).mpsFundGroups}
+                    color="#e11d48"
+                    total={MPS_FUND_TOTAL}
+                    yourTax={mpsTax}
+                    jurisdiction="Milwaukee Public Schools"
+                  />
+                )}
+              </div>
+            }
+          />
         </div>
 
         {/* ---- County Detail (1 col) ---- */}
-        <div
-          className={`${cardBase} col-span-1 ${bgTints.county} overflow-hidden md:col-span-1`}
-        >
-          <button
-            onClick={() =>
+        <div className="col-span-1 md:col-span-1">
+          <ExpandableCard
+            id="county"
+            isExpanded={expandedJurisdiction === "county"}
+            onToggle={() =>
               setExpandedJurisdiction(
                 expandedJurisdiction === "county" ? null : "county",
               )
             }
-            className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-violet-100/40"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-xl">🏞️</span>
-              <div>
-                <div className="text-sm font-bold text-gray-900">
-                  County Detail
-                </div>
-                <div className="text-[10px] text-gray-400">
-                  10 functional areas
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-violet-600">
-                {fmt(countyTax)}
-              </span>
-              <span
-                className="text-sm text-violet-600 transition-transform duration-200"
-                style={{
-                  transform:
-                    expandedJurisdiction === "county"
-                      ? "rotate(180deg)"
-                      : "rotate(0)",
-                }}
+            accentColor="#7c3aed"
+            preview={
+              <div
+                className={`${cardBase} ${bgTints.county} flex items-center justify-between px-4 py-3 transition-colors hover:bg-violet-100/40`}
               >
-                &#x25BE;
-              </span>
-            </div>
-          </button>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{"\ud83c\udfde\ufe0f"}</span>
+                  <div>
+                    <div className="text-sm font-bold text-gray-900">
+                      County Detail
+                    </div>
+                    <div className="text-[10px] text-gray-400">
+                      10 functional areas
+                    </div>
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-violet-600">
+                  {fmt(countyTax)}
+                </span>
+              </div>
+            }
+            detail={
+              <div>
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="text-2xl">{"\ud83c\udfde\ufe0f"}</span>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">
+                      County Detail
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Your share: <span className="font-bold text-violet-600">{fmt(countyTax)}</span>
+                    </div>
+                  </div>
+                </div>
 
-          {expandedJurisdiction === "county" && (
-            <div className="border-t border-gray-200 px-3 pb-4 pt-3">
-              <DepartmentRows
-                items={(taxRatesData as any).countyDepartments}
-                color="#7c3aed"
-                total={COUNTY_DEPT_TOTAL}
-                yourTax={countyTax}
-                jurisdiction="Milwaukee County"
-              />
-            </div>
-          )}
+                <DepartmentRows
+                  items={(taxRatesData as any).countyDepartments}
+                  color="#7c3aed"
+                  total={COUNTY_DEPT_TOTAL}
+                  yourTax={countyTax}
+                  jurisdiction="Milwaukee County"
+                />
+              </div>
+            }
+          />
         </div>
 
         {/* ---- Remaining jurisdictions (MMSD, MATC) ---- */}
