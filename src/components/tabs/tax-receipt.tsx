@@ -367,22 +367,24 @@ export function TaxReceipt() {
 
   // Lifted story state for voice button
   const [storyText, setStoryText] = useState<string>("");
-  const [isPlaying, setIsPlaying] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [briefingState, setBriefingState] = useState<"idle" | "loading" | "playing">("idle");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const sonicClientRef = useRef<SonicClient | null>(null);
   const [taxTalkState, setTaxTalkState] = useState<SonicState>("idle");
   const [taxTalkAmplitude, setTaxTalkAmplitude] = useState(0);
+  const [talkError, setTalkError] = useState<string | null>(null);
   const SONIC_URL = process.env.NEXT_PUBLIC_SONIC_URL ?? "http://localhost:3001";
 
   const handleTalkAboutTaxes = useCallback(async () => {
     if (taxTalkState !== "idle") {
-      // Disconnect
       sonicClientRef.current?.disconnect();
       sonicClientRef.current = null;
       setTaxTalkState("idle");
+      setTalkError(null);
       return;
     }
 
+    setTalkError(null);
     const client = new SonicClient({
       sonicUrl: SONIC_URL,
       persona: persona || "citizen",
@@ -398,10 +400,9 @@ export function TaxReceipt() {
       onTranscript: () => {},
       onToolUse: () => {},
       onAmplitude: setTaxTalkAmplitude,
-      onError: () => {
+      onError: (msg) => {
         setTaxTalkState("idle");
-        // Fallback to Web Speech API
-        handleBriefMe();
+        setTalkError("Voice server unavailable. Use Brief me for an AI-narrated summary.");
       },
     });
 
@@ -409,32 +410,78 @@ export function TaxReceipt() {
     try {
       await client.connect();
     } catch {
-      handleBriefMe(); // fallback
+      setTalkError("Voice server unavailable. Use Brief me for an AI-narrated summary.");
     }
   }, [taxTalkState, SONIC_URL, persona, assessedValue, totalTax, jurisdictions]);
 
-  const handleBriefMe = useCallback(() => {
-    if (isPlaying) {
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
+  const handleBriefMe = useCallback(async () => {
+    // Toggle off if playing
+    if (briefingState === "playing") {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      setBriefingState("idle");
       return;
     }
-    const text =
-      storyText ||
-      `Your total annual property tax is ${fmt(totalTax)}, about ${fmt(totalTax / 12)} per month.`;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-    utterance.onend = () => setIsPlaying(false);
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-    setIsPlaying(true);
-  }, [storyText, isPlaying, totalTax]);
 
-  // Cleanup speech on unmount
+    setBriefingState("loading");
+    setTalkError(null);
+
+    try {
+      // Step 1: Generate NPR-quality script via Nova Pro
+      const briefingRes = await fetch("/api/voice-briefing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assessedValue,
+          totalTax,
+          persona: persona || "citizen",
+          jurisdictions: jurisdictions.map((j: any) => ({
+            shortName: j.shortName,
+            yourShare: j.yourShare,
+            pct: j.pct,
+          })),
+        }),
+      });
+
+      const briefingData = briefingRes.ok ? await briefingRes.json() : null;
+      const script =
+        briefingData?.script ||
+        storyText ||
+        `Your total annual property tax is ${fmt(totalTax)}, about ${fmt(totalTax / 12)} per month. The largest share goes to Milwaukee Public Schools.`;
+
+      // Step 2: Synthesize with Amazon Polly neural voice
+      const ttsRes = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: script }),
+      });
+
+      if (!ttsRes.ok) throw new Error("TTS failed");
+
+      const audioBlob = await ttsRes.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.onended = () => {
+        setBriefingState("idle");
+        URL.revokeObjectURL(audioUrl);
+      };
+      audio.onerror = () => {
+        setBriefingState("idle");
+        URL.revokeObjectURL(audioUrl);
+      };
+      audioRef.current = audio;
+      await audio.play();
+      setBriefingState("playing");
+    } catch {
+      setBriefingState("idle");
+      setTalkError("Briefing unavailable. Check your connection.");
+    }
+  }, [briefingState, assessedValue, totalTax, persona, jurisdictions, storyText]);
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      window.speechSynthesis.cancel();
+      audioRef.current?.pause();
       sonicClientRef.current?.disconnect();
     };
   }, []);
@@ -544,12 +591,18 @@ export function TaxReceipt() {
               </button>
               <button
                 onClick={handleBriefMe}
-                className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20"
-                title="Text-to-speech fallback"
+                disabled={briefingState === "loading"}
+                className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20 disabled:opacity-50"
+                title="AI-narrated budget briefing powered by Nova Pro + Amazon Polly"
               >
-                {isPlaying ? (
+                {briefingState === "loading" ? (
                   <>
-                    <span className="text-sm">{"\u23f8\ufe0f"}</span> Pause
+                    <span className="inline-block h-2 w-2 animate-spin rounded-full border border-white border-t-transparent" />
+                    Generating...
+                  </>
+                ) : briefingState === "playing" ? (
+                  <>
+                    <span className="text-sm">{"\u23f8\ufe0f"}</span> Stop
                   </>
                 ) : (
                   <>
@@ -566,6 +619,18 @@ export function TaxReceipt() {
               </div>
             </div>
           </div>
+          {/* Voice error toast */}
+          {talkError && (
+            <div className="mt-2 flex items-center justify-between rounded-lg bg-amber-900/80 px-3 py-2">
+              <span className="text-[11px] text-amber-200">{talkError}</span>
+              <button
+                onClick={() => setTalkError(null)}
+                className="ml-2 text-xs text-amber-400 hover:text-white"
+              >
+                {"\u2715"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ---- Stacked Bar (2 col) ---- */}
