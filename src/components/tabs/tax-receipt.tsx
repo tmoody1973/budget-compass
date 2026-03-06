@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import ReactECharts from "echarts-for-react";
 import { useBudget } from "@/contexts/budget-context";
 import taxRatesData from "../../../data/tax-rates-2026.json";
@@ -75,13 +75,52 @@ function DepartmentRows({
   color,
   total,
   yourTax,
+  jurisdiction,
 }: {
   items: { name: string; budget: number; desc?: string }[];
   color: string;
   total: number;
   yourTax: number;
+  jurisdiction: string;
 }) {
   const maxBudget = Math.max(...items.map((d) => d.budget));
+  const [activeExplain, setActiveExplain] = useState<string | null>(null);
+  const [explanations, setExplanations] = useState<Record<string, string>>({});
+  const [loadingExplain, setLoadingExplain] = useState<string | null>(null);
+
+  const handleExplain = useCallback(
+    async (name: string, budget: number, share: number) => {
+      if (activeExplain === name) {
+        setActiveExplain(null);
+        return;
+      }
+      setActiveExplain(name);
+      if (explanations[name]) return;
+      setLoadingExplain(name);
+      try {
+        const res = await fetch("/api/receipt-explain", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            item: name,
+            budget,
+            yourShare: share,
+            jurisdiction,
+          }),
+        });
+        const data = await res.json();
+        if (data.explanation) {
+          setExplanations((prev) => ({ ...prev, [name]: data.explanation }));
+        }
+      } catch {
+        // silently fail — no explanation shown
+      } finally {
+        setLoadingExplain(null);
+      }
+    },
+    [activeExplain, explanations, jurisdiction],
+  );
+
   return (
     <div className="space-y-0">
       {items.map((d, i) => {
@@ -93,13 +132,21 @@ function DepartmentRows({
             className={`py-1.5 ${i > 0 ? "border-t border-gray-100" : ""}`}
           >
             <div className="flex items-start justify-between gap-2">
-              <div>
+              <div className="flex items-center gap-1.5">
                 <span className="text-[11px] font-semibold text-gray-800">
                   {d.name}
                 </span>
-                {d.desc && (
-                  <div className="text-[9px] text-gray-400">{d.desc}</div>
-                )}
+                <button
+                  onClick={() => handleExplain(d.name, d.budget, share)}
+                  className="flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-full border border-gray-300 text-[8px] font-bold text-gray-400 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-500"
+                  title="Explain this item"
+                >
+                  {loadingExplain === d.name ? (
+                    <span className="inline-block h-2 w-2 animate-spin rounded-full border border-blue-400 border-t-transparent" />
+                  ) : (
+                    "?"
+                  )}
+                </button>
               </div>
               <div className="shrink-0 text-right">
                 <div className="text-xs font-bold text-gray-900">
@@ -110,6 +157,14 @@ function DepartmentRows({
                 </div>
               </div>
             </div>
+            {activeExplain === d.name && explanations[d.name] && (
+              <div className="mt-1.5 rounded-md bg-blue-50 px-2.5 py-2 text-[10px] leading-relaxed text-blue-900">
+                {explanations[d.name]}
+                <div className="mt-1 text-right text-[8px] text-gray-400">
+                  Powered by Nova
+                </div>
+              </div>
+            )}
             <div className="mt-1 h-[3px] overflow-hidden rounded-full bg-gray-100">
               <div
                 className="h-full rounded-full transition-all duration-300"
@@ -132,31 +187,37 @@ function AIInsightsCard({
   totalTax,
   persona,
   jurisdictions,
+  onStoryReady,
 }: {
   assessedValue: number;
   totalTax: number;
   persona: string;
   jurisdictions: any[];
+  onStoryReady: (story: string) => void;
 }) {
-  const [insights, setInsights] = useState<string[]>([]);
+  const [story, setStory] = useState<string>("");
+  const [didYouKnow, setDidYouKnow] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  // Static fallback insights
-  const fallbackInsights = useMemo(() => {
+  // Static fallbacks
+  const fallbackStory = useMemo(() => {
     const daily = totalTax / 365;
+    const monthly = totalTax / 12;
     const mpsJ = jurisdictions.find((j: any) => j.id === "mps");
     const cityJ = jurisdictions.find((j: any) => j.id === "city");
-    const mpsPct = mpsJ ? ((mpsJ.rate / 22.42) * 100).toFixed(0) : "43";
-    return [
-      `Your daily tax: ${fmt(daily)} — about the price of a coffee`,
-      `MPS gets ${mpsPct}¢ of every dollar, boosted by the 2024 voter-approved referendum`,
-      `Every tax rate dropped this year, but your bill may have risen due to higher assessed values`,
-      cityJ
-        ? `Police & Fire get ${fmt(cityJ.yourShare * 0.51)} of your city share — 51% of city operations`
-        : `Public safety is the largest city expense at 51% of operations`,
-    ];
-  }, [totalTax, jurisdictions]);
+    const biggestJ = jurisdictions[0];
+    return `Your home is assessed at $${assessedValue.toLocaleString()}, and your total annual property tax comes to ${fmt(totalTax)} — that's ${fmt(monthly)} per month or about ${fmt(daily)} per day, roughly the cost of a coffee.\n\nThe biggest slice of your bill goes to ${biggestJ?.shortName || "MPS"}, which receives ${biggestJ?.pct?.toFixed(0) || "43"}% of every dollar. ${mpsJ ? `MPS's share grew after the 2024 voter-approved referendum that expanded school funding.` : ""} All five tax rates actually dropped this year, but rising assessed values mean your bill may still have increased.\n\nYour taxes fund schools, public safety, parks, libraries, and the infrastructure that keeps Milwaukee running. ${cityJ ? `Of your city portion, about 51% goes to Police and Fire services.` : ""} Understanding where your money goes is the first step to civic engagement.`;
+  }, [assessedValue, totalTax, jurisdictions]);
+
+  const fallbackFacts = useMemo(
+    () => [
+      "Milwaukee County's 0.4% sales tax, approved in 2023, generates ~$170M annually and helps offset property tax increases.",
+      "MPS spends approximately $16,000 per pupil — above the national average of $14,347 — funded largely through the property tax levy.",
+      "All five Milwaukee taxing jurisdictions lowered their mill rates in 2026, but total levy collections still grew due to rising property values.",
+    ],
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -164,7 +225,9 @@ function AIInsightsCard({
       if (!cancelled && loading) {
         setLoading(false);
         setError(true);
-        setInsights(fallbackInsights);
+        setStory(fallbackStory);
+        setDidYouKnow(fallbackFacts);
+        onStoryReady(fallbackStory);
       }
     }, 8000);
 
@@ -187,15 +250,22 @@ function AIInsightsCard({
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled) {
-          setInsights(data.insights?.length ? data.insights : fallbackInsights);
+          const s = data.story || fallbackStory;
+          const facts =
+            data.didYouKnow?.length > 0 ? data.didYouKnow : fallbackFacts;
+          setStory(s);
+          setDidYouKnow(facts);
           setLoading(false);
+          onStoryReady(s);
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setInsights(fallbackInsights);
+          setStory(fallbackStory);
+          setDidYouKnow(fallbackFacts);
           setLoading(false);
           setError(true);
+          onStoryReady(fallbackStory);
         }
       });
 
@@ -209,9 +279,10 @@ function AIInsightsCard({
     <div
       className={`${cardBase} bg-gradient-to-br from-amber-50 to-orange-50 p-4`}
     >
+      {/* Your Tax Story */}
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-lg">✨</span>
-        <h3 className="text-sm font-bold text-amber-900">AI Insights</h3>
+        <span className="text-lg">{"\ud83d\udcd6"}</span>
+        <h3 className="text-sm font-bold text-amber-900">Your Tax Story</h3>
         {error && (
           <span className="ml-auto text-[9px] text-amber-600">
             pre-computed
@@ -224,21 +295,50 @@ function AIInsightsCard({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-10 animate-pulse rounded-lg bg-amber-200/50"
+              className="h-12 animate-pulse rounded-lg bg-amber-200/50"
             />
           ))}
         </div>
       ) : (
-        <div className="space-y-2">
-          {insights.map((text, i) => (
-            <div
-              key={i}
-              className="rounded-lg bg-white/70 px-3 py-2 text-xs leading-relaxed text-amber-900"
-            >
-              {text}
+        <>
+          <div className="space-y-2">
+            {story.split("\n").filter(Boolean).map((para, i) => (
+              <p
+                key={i}
+                className="rounded-lg bg-white/70 px-3 py-2 text-xs leading-relaxed text-amber-900"
+              >
+                {para}
+              </p>
+            ))}
+          </div>
+
+          {/* Did You Know */}
+          {didYouKnow.length > 0 && (
+            <div className="mt-4">
+              <div className="mb-2 flex items-center gap-1.5">
+                <span className="text-sm">{"\ud83d\udca1"}</span>
+                <h4 className="text-xs font-bold text-amber-800">
+                  Did You Know?
+                </h4>
+              </div>
+              <div className="flex flex-col gap-2">
+                {didYouKnow.map((fact, i) => (
+                  <div
+                    key={i}
+                    className="rounded-xl bg-white/80 px-3 py-2 text-[11px] leading-relaxed text-amber-900 shadow-sm"
+                  >
+                    {fact}
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
+          )}
+
+          {/* Powered by Amazon Nova badge */}
+          <div className="mt-3 text-right text-[9px] text-amber-600/60">
+            Powered by Amazon Nova
+          </div>
+        </>
       )}
     </div>
   );
@@ -260,6 +360,36 @@ export function TaxReceipt() {
     "services",
   );
   const [mpsView, setMpsView] = useState<"offices" | "funds">("offices");
+
+  // Lifted story state for voice button
+  const [storyText, setStoryText] = useState<string>("");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const handleBriefMe = useCallback(() => {
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      return;
+    }
+    const text =
+      storyText ||
+      `Your total annual property tax is ${fmt(totalTax)}, about ${fmt(totalTax / 12)} per month.`;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    utterance.onend = () => setIsPlaying(false);
+    utteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+    setIsPlaying(true);
+  }, [storyText, isPlaying, totalTax]);
+
+  // Cleanup speech on unmount
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
 
   /* City-level calculations */
   const cityJurisdiction = jurisdictions.find((j) => j.id === "city")!;
@@ -348,12 +478,28 @@ export function TaxReceipt() {
                 {fmt(totalTax)}
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-white/90">
-                ${grossRate}
-                <span className="text-xs text-gray-400">/1K</span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleBriefMe}
+                className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20"
+              >
+                {isPlaying ? (
+                  <>
+                    <span className="text-sm">{"\u23f8\ufe0f"}</span> Pause
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm">{"\ud83c\udfa7"}</span> Brief me
+                  </>
+                )}
+              </button>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-white/90">
+                  ${grossRate}
+                  <span className="text-xs text-gray-400">/1K</span>
+                </div>
+                <div className="text-[10px] text-gray-500">combined rate</div>
               </div>
-              <div className="text-[10px] text-gray-500">combined rate</div>
             </div>
           </div>
         </div>
@@ -441,6 +587,7 @@ export function TaxReceipt() {
             totalTax={totalTax}
             persona={persona}
             jurisdictions={jurisdictions}
+            onStoryReady={setStoryText}
           />
         </div>
 
@@ -742,6 +889,7 @@ export function TaxReceipt() {
                   color="#e11d48"
                   total={MPS_OFFICE_TOTAL}
                   yourTax={mpsTax}
+                  jurisdiction="Milwaukee Public Schools"
                 />
               )}
 
@@ -751,6 +899,7 @@ export function TaxReceipt() {
                   color="#e11d48"
                   total={MPS_FUND_TOTAL}
                   yourTax={mpsTax}
+                  jurisdiction="Milwaukee Public Schools"
                 />
               )}
             </div>
@@ -805,6 +954,7 @@ export function TaxReceipt() {
                 color="#7c3aed"
                 total={COUNTY_DEPT_TOTAL}
                 yourTax={countyTax}
+                jurisdiction="Milwaukee County"
               />
             </div>
           )}

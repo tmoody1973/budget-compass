@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 
     const agent = mastra.getAgent("receiptInsightsAgent");
 
-    const prompt = `Generate personalized tax bill insights for this Milwaukee property owner.
+    const prompt = `Generate a personalized tax story and civic facts for this Milwaukee property owner.
 
 Assessed Value: $${assessedValue.toLocaleString()}
 Total Annual Tax: $${totalTax.toFixed(2)}
@@ -30,26 +30,33 @@ Median Milwaukee home: $166,000. All 5 tax rates dropped in 2026 due to rising a
 
     const result = await agent.generate(prompt);
 
-    let insights: string[];
+    let story: string;
+    let didYouKnow: string[];
     try {
       const text = result.text.trim();
-      // Try to parse JSON array from the response
-      const match = text.match(/\[[\s\S]*\]/);
-      insights = match ? JSON.parse(match[0]) : [text];
+      // Try to parse JSON object from the response
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) {
+        const parsed = JSON.parse(match[0]);
+        story = typeof parsed.story === "string" ? parsed.story : "";
+        didYouKnow = Array.isArray(parsed.didYouKnow)
+          ? parsed.didYouKnow
+          : [];
+      } else {
+        // Fallback: treat entire text as story
+        story = text;
+        didYouKnow = [];
+      }
     } catch {
-      // If JSON parsing fails, split by newlines
-      insights = result.text
-        .split("\n")
-        .map((l: string) => l.replace(/^[-*•\d.]+\s*/, "").trim())
-        .filter((l: string) => l.length > 10)
-        .slice(0, 4);
+      story = result.text.trim();
+      didYouKnow = [];
     }
 
-    return NextResponse.json({ insights });
+    return NextResponse.json({ story, didYouKnow });
   } catch (error) {
     console.error("Receipt insights error:", error);
     return NextResponse.json(
-      { insights: [], error: "Failed to generate insights" },
+      { story: "", didYouKnow: [], error: "Failed to generate insights" },
       { status: 500 },
     );
   }
