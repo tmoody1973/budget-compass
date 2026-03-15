@@ -513,69 +513,6 @@ export function AskChat() {
         </div>
       </div>
 
-      {/* Nova Act budget search */}
-      <div className="flex items-center gap-2 border-b-2 border-gray-900 px-4 py-2">
-        <input
-          type="text"
-          value={searchCity}
-          onChange={(e) => setSearchCity(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleBudgetSearch(); }}
-          placeholder="Find a city's budget (e.g., Green Bay, WI)"
-          disabled={isSearchingBudget}
-          className="flex-1 border-2 border-black px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-mke-blue disabled:opacity-50"
-        />
-        <button
-          onClick={handleBudgetSearch}
-          disabled={isSearchingBudget || !searchCity.trim()}
-          className="border-2 border-black bg-purple-200 px-3 py-1.5 text-sm font-bold shadow-[2px_2px_0px_0px_#111] transition-all hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#111] disabled:opacity-50"
-        >
-          {isSearchingBudget ? "Searching..." : "Find Budget"}
-        </button>
-      </div>
-
-      {/* Search progress steps */}
-      {isSearchingBudget && searchSteps.length > 0 && (
-        <div className="border-b border-purple-200 bg-purple-50 px-4 py-2">
-          {searchSteps.map((step, i) => (
-            <div key={i} className="flex items-center gap-2 text-sm text-purple-800">
-              <span>{i === searchSteps.length - 1 ? "\u23f3" : "\u2713"}</span>
-              <span>{step}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Search results */}
-      {searchResults.length > 0 && !isSearchingBudget && (
-        <div className="border-b-2 border-gray-900 bg-green-50 px-4 py-2">
-          <p className="mb-2 text-sm font-bold text-green-800">
-            Found {searchResults.length} budget document{searchResults.length !== 1 ? "s" : ""}:
-          </p>
-          {searchResults.map((r, i) => (
-            <div key={i} className="flex items-center justify-between gap-2 py-1.5">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">{r.title}</p>
-                <p className="truncate text-xs text-gray-500">{r.source_page}</p>
-              </div>
-              <button
-                onClick={() => handleAnalyzeUrl(r.url, r.title)}
-                disabled={isUploading}
-                className="shrink-0 border-2 border-black bg-green-200 px-3 py-1 text-sm font-bold shadow-[2px_2px_0px_0px_#111] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#111] disabled:opacity-50"
-              >
-                {isUploading ? "Analyzing..." : "Analyze"}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Search error */}
-      {searchError && (
-        <div className="flex items-center justify-between border-b border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-          <span>{searchError}</span>
-          <button onClick={() => setSearchError(null)} className="font-bold hover:text-red-900">x</button>
-        </div>
-      )}
 
       {/* Upload error */}
       {uploadError && (
