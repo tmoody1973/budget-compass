@@ -24,7 +24,7 @@ interface ComparisonBudget {
   total_budget: number;
   departments: { name: string; category: string; budget: number; percent_of_total: number }[];
   summary?: string;
-  source: "pre-loaded" | "uploaded";
+  source: "pre-loaded" | "uploaded" | "nova-act";
 }
 
 /* ------------------------------------------------------------------ */
@@ -162,6 +162,13 @@ export function AskChat() {
 
   const selectedBudget = availableBudgets.find((b) => b.id === selectedBudgetId) ?? null;
 
+  // Nova Act search state
+  const [searchCity, setSearchCity] = useState("");
+  const [isSearchingBudget, setIsSearchingBudget] = useState(false);
+  const [searchSteps, setSearchSteps] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<{ title: string; url: string; source_page: string; file_type: string }[]>([]);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
   /* Auto-scroll on new messages */
   useEffect(() => {
     if (scrollRef.current) {
@@ -220,6 +227,98 @@ export function AskChat() {
       setUsedRealApi(true);
     } catch {
       setUploadError("Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  }, []);
+
+  /* Nova Act budget search */
+  const handleBudgetSearch = useCallback(async () => {
+    if (!searchCity.trim()) return;
+    setIsSearchingBudget(true);
+    setSearchError(null);
+    setSearchResults([]);
+    setSearchSteps(["Starting Nova Act search..."]);
+
+    const parts = searchCity.split(",").map((s) => s.trim());
+    const city = parts[0] ?? searchCity;
+    const state = parts[1] ?? "WI";
+
+    try {
+      const res = await fetch("/api/find-budget", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ city, state }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setSearchError(data.error ?? "Search failed");
+        return;
+      }
+
+      setSearchSteps(data.search_steps ?? []);
+      setSearchResults(data.results ?? []);
+
+      if (!data.results?.length) {
+        setSearchError(`No budget documents found for ${city}, ${state}. Try a different city name.`);
+      }
+    } catch {
+      setSearchError("Could not reach the budget finder service.");
+    } finally {
+      setIsSearchingBudget(false);
+    }
+  }, [searchCity]);
+
+  /* Analyze a PDF from a URL (Nova Act found it) */
+  const handleAnalyzeUrl = useCallback(async (url: string, title: string) => {
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("url", url);
+
+      const res = await fetch("/api/analyze-budget", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setUploadError(data.error ?? "Failed to analyze PDF");
+        return;
+      }
+
+      const result = data.result;
+      const newBudget: ComparisonBudget = {
+        id: result.id ?? `nova-act-${Date.now()}`,
+        city: result.city ?? title,
+        state: result.state ?? "??",
+        fiscal_year: result.fiscal_year ?? 2025,
+        total_budget: result.total_budget ?? 0,
+        departments: result.departments ?? [],
+        summary: result.summary,
+        source: "nova-act",
+      };
+
+      setAvailableBudgets((prev) => [...prev, newBudget]);
+      setSelectedBudgetId(newBudget.id);
+      setSearchResults([]);
+      setSearchCity("");
+
+      const sysMsg: Message = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: `Nova found and analyzed **${newBudget.city}**'s budget (${newBudget.fiscal_year}). Total: **${formatCurrency(newBudget.total_budget)}** with ${newBudget.departments.length} departments.\n\n${newBudget.summary ?? ""}\n\nTry: "How does Milwaukee compare to ${newBudget.city}?"`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, sysMsg]);
+      setUsedRealApi(true);
+    } catch {
+      setUploadError("Failed to analyze the PDF. Try uploading manually.");
     } finally {
       setIsUploading(false);
     }
@@ -383,6 +482,70 @@ export function AskChat() {
           />
         </div>
       </div>
+
+      {/* Nova Act budget search */}
+      <div className="flex items-center gap-2 border-b-2 border-gray-900 px-4 py-2">
+        <input
+          type="text"
+          value={searchCity}
+          onChange={(e) => setSearchCity(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") handleBudgetSearch(); }}
+          placeholder="Find a city's budget (e.g., Green Bay, WI)"
+          disabled={isSearchingBudget}
+          className="flex-1 border-2 border-black px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-mke-blue disabled:opacity-50"
+        />
+        <button
+          onClick={handleBudgetSearch}
+          disabled={isSearchingBudget || !searchCity.trim()}
+          className="border-2 border-black bg-purple-200 px-3 py-1.5 text-sm font-bold shadow-[2px_2px_0px_0px_#111] transition-all hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#111] disabled:opacity-50"
+        >
+          {isSearchingBudget ? "Searching..." : "Find Budget"}
+        </button>
+      </div>
+
+      {/* Search progress steps */}
+      {isSearchingBudget && searchSteps.length > 0 && (
+        <div className="border-b border-purple-200 bg-purple-50 px-4 py-2">
+          {searchSteps.map((step, i) => (
+            <div key={i} className="flex items-center gap-2 text-sm text-purple-800">
+              <span>{i === searchSteps.length - 1 ? "\u23f3" : "\u2713"}</span>
+              <span>{step}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Search results */}
+      {searchResults.length > 0 && !isSearchingBudget && (
+        <div className="border-b-2 border-gray-900 bg-green-50 px-4 py-2">
+          <p className="mb-2 text-sm font-bold text-green-800">
+            Found {searchResults.length} budget document{searchResults.length !== 1 ? "s" : ""}:
+          </p>
+          {searchResults.map((r, i) => (
+            <div key={i} className="flex items-center justify-between gap-2 py-1.5">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold">{r.title}</p>
+                <p className="truncate text-xs text-gray-500">{r.source_page}</p>
+              </div>
+              <button
+                onClick={() => handleAnalyzeUrl(r.url, r.title)}
+                disabled={isUploading}
+                className="shrink-0 border-2 border-black bg-green-200 px-3 py-1 text-sm font-bold shadow-[2px_2px_0px_0px_#111] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#111] disabled:opacity-50"
+              >
+                {isUploading ? "Analyzing..." : "Analyze"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Search error */}
+      {searchError && (
+        <div className="flex items-center justify-between border-b border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          <span>{searchError}</span>
+          <button onClick={() => setSearchError(null)} className="font-bold hover:text-red-900">x</button>
+        </div>
+      )}
 
       {/* Upload error */}
       {uploadError && (
