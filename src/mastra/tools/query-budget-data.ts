@@ -73,9 +73,39 @@ export const queryBudgetDataTool = createTool({
 
     const queryFn = budgetApi[input.queryName];
     const result = await convex.query(queryFn, input.args ?? {});
+
+    // Pre-format data as markdown table so the LLM doesn't scramble name-to-number mappings
+    let formattedTable = "";
+    if (Array.isArray(result) && result.length > 0) {
+      const first = result[0];
+      if (first && typeof first === "object" && ("name" in first || "department" in first)) {
+        const nameKey = "name" in first ? "name" : "department";
+        const numericKeys = Object.keys(first).filter(
+          (k) => k !== nameKey && k !== "_id" && k !== "_creationTime" && typeof first[k] === "number"
+        );
+        if (numericKeys.length > 0) {
+          const headers = [nameKey, ...numericKeys];
+          formattedTable = `\n\nPRE-FORMATTED TABLE (copy this EXACTLY into your response, do NOT reorder or change any values):\n\n`;
+          formattedTable += `| ${headers.map((h) => h.charAt(0).toUpperCase() + h.slice(1)).join(" | ")} |\n`;
+          formattedTable += `| ${headers.map(() => "---").join(" | ")} |\n`;
+          for (const row of result.slice(0, 15)) {
+            const cells = headers.map((h) => {
+              const val = row[h];
+              if (typeof val === "number" && val > 1000) {
+                return `$${val.toLocaleString("en-US")}`;
+              }
+              return String(val ?? "");
+            });
+            formattedTable += `| ${cells.join(" | ")} |\n`;
+          }
+        }
+      }
+    }
+
     return {
       data: result,
       source: `Convex: budget.${input.queryName}`,
+      ...(formattedTable ? { formattedTable } : {}),
     };
   },
 });
