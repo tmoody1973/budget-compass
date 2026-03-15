@@ -296,16 +296,26 @@ export function AskChat() {
     }
   }, [searchCity]);
 
-  /* Analyze a PDF from a URL — routes through Railway (no Vercel timeout) */
+  /* Analyze a PDF from a URL — calls Railway DIRECTLY to avoid Vercel timeout */
   const handleAnalyzeUrl = useCallback(async (url: string, title: string) => {
     setIsUploading(true);
     setUploadError(null);
 
     try {
-      const res = await fetch("/api/find-budget", {
+      // Call Railway directly (no Vercel proxy) to avoid function timeout on large PDFs
+      const serviceUrl = process.env.NEXT_PUBLIC_NOVA_ACT_SERVICE_URL ?? "";
+      const analyzeUrl = serviceUrl
+        ? `${serviceUrl}/analyze`
+        : "/api/find-budget"; // fallback to proxy
+
+      const res = await fetch(analyzeUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "analyze", url, city_hint: title }),
+        body: JSON.stringify(
+          serviceUrl
+            ? { url, city_hint: title }
+            : { action: "analyze", url, city_hint: title }
+        ),
       });
 
       const data = await res.json();
