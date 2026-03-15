@@ -244,6 +244,25 @@ export function AskChat() {
     const city = parts[0] ?? searchCity;
     const state = parts[1] ?? "WI";
 
+    // Show live progress steps while Nova Act works
+    const progressSteps = [
+      { text: `Searching for ${city}, ${state} budget page...`, delay: 0 },
+      { text: `Nova Act opening browser...`, delay: 2000 },
+      { text: `Navigating to ${city} government website...`, delay: 5000 },
+      { text: `Page loaded. Scanning for budget documents...`, delay: 9000 },
+      { text: `Extracting PDF download links...`, delay: 14000 },
+      { text: `Almost done...`, delay: 20000 },
+    ];
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (const step of progressSteps) {
+      timers.push(
+        setTimeout(() => {
+          setSearchSteps((prev) => [...prev, step.text]);
+        }, step.delay)
+      );
+    }
+
     try {
       const res = await fetch("/api/find-budget", {
         method: "POST",
@@ -251,13 +270,18 @@ export function AskChat() {
         body: JSON.stringify({ city, state }),
       });
 
+      // Clear simulated steps, show real ones
+      timers.forEach(clearTimeout);
+
       const data = await res.json();
 
       if (!res.ok) {
         setSearchError(data.error ?? "Search failed");
+        setSearchSteps([]);
         return;
       }
 
+      // Replace with real steps from Nova Act
       setSearchSteps(data.search_steps ?? []);
       setSearchResults(data.results ?? []);
 
@@ -265,6 +289,7 @@ export function AskChat() {
         setSearchError(`No budget documents found for ${city}, ${state}. Try a different city name.`);
       }
     } catch {
+      timers.forEach(clearTimeout);
       setSearchError("Could not reach the budget finder service.");
     } finally {
       setIsSearchingBudget(false);
