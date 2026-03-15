@@ -432,7 +432,8 @@ export function AskChat() {
           prev.map((m) => (m.id === aiMsgId ? { ...m, content } : m))
         );
       }
-    } catch {
+    } catch (err) {
+      console.error("Chat error:", err);
       const aiMsg: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
