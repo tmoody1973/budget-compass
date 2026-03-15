@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { Renderer } from "@openuidev/react-lang";
+import { openuiChatLibrary } from "@openuidev/react-ui/genui-lib";
 import { useBudget } from "@/contexts/budget-context";
 
 const STEPS = [
@@ -178,17 +180,27 @@ export function Budget101() {
               <span className="text-base font-medium">Nova is looking this up...</span>
             </div>
           ) : (
-            <div className="prose prose-base max-w-none text-gray-800 leading-relaxed">
-              {(responses[currentStep] ?? "").split("\n").map((line, i) => {
-                if (!line.trim()) return <br key={i} />;
-                if (line.startsWith("**") && line.endsWith("**")) {
-                  return <p key={i} className="font-black text-mke-dark">{line.replace(/\*\*/g, "")}</p>;
-                }
-                if (line.startsWith("- ") || line.startsWith("* ")) {
-                  return <p key={i} className="ml-4 before:content-['•_'] before:font-bold">{line.slice(2)}</p>;
-                }
-                return <p key={i}>{line}</p>;
-              })}
+            <div className="max-w-none">
+              {(responses[currentStep] ?? "").includes("root =") ? (
+                <Renderer
+                  library={openuiChatLibrary}
+                  response={responses[currentStep] ?? ""}
+                  isStreaming={isLoading}
+                />
+              ) : (
+                <div className="prose prose-base text-gray-800 leading-relaxed">
+                  {(responses[currentStep] ?? "").split("\n").map((line, i) => {
+                    if (!line.trim()) return <br key={i} />;
+                    if (line.startsWith("**") && line.endsWith("**")) {
+                      return <p key={i} className="font-black text-mke-dark">{line.replace(/\*\*/g, "")}</p>;
+                    }
+                    if (line.startsWith("- ") || line.startsWith("* ")) {
+                      return <p key={i} className="ml-4 before:content-['•_'] before:font-bold">{line.slice(2)}</p>;
+                    }
+                    return <p key={i}>{line}</p>;
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

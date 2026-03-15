@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { Renderer } from "@openuidev/react-lang";
+import { openuiChatLibrary } from "@openuidev/react-ui/genui-lib";
+import "@openuidev/react-ui/components.css";
+import "@openuidev/react-ui/styles/index.css";
 import { useBudget } from "@/contexts/budget-context";
 import madisonData from "../../../data/comparison/madison.json";
 import madisonSchoolsData from "../../../data/comparison/madison-schools.json";
@@ -150,6 +154,7 @@ export function AskChat() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [usedRealApi, setUsedRealApi] = useState(false);
+  const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -423,6 +428,7 @@ export function AskChat() {
         ...prev,
         { id: aiMsgId, role: "assistant", content: "", timestamp: new Date() },
       ]);
+      setStreamingMsgId(aiMsgId);
       setIsTyping(false);
       setUsedRealApi(true);
 
@@ -434,6 +440,7 @@ export function AskChat() {
           prev.map((m) => (m.id === aiMsgId ? { ...m, content } : m))
         );
       }
+      setStreamingMsgId(null);
     } catch (err) {
       console.error("Chat error:", err);
       const aiMsg: Message = {
@@ -597,17 +604,30 @@ export function AskChat() {
                 key={msg.id}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-base leading-relaxed ${
-                    msg.role === "user"
-                      ? "rounded-br-md bg-mke-blue text-white"
-                      : "rounded-bl-md border-2 border-gray-200 bg-gray-50 text-gray-900"
-                  }`}
-                >
-                  {msg.role === "assistant"
-                    ? renderMarkdown(msg.content)
-                    : msg.content}
-                </div>
+                {msg.role === "user" ? (
+                  <div className="max-w-[80%] rounded-2xl rounded-br-md bg-mke-blue px-4 py-2.5 text-base leading-relaxed text-white">
+                    {msg.content}
+                  </div>
+                ) : (
+                  <div className="w-full max-w-[90%]">
+                    {msg.content.includes("root =") || msg.content.includes("= Card(") ? (
+                      <Renderer
+                        library={openuiChatLibrary}
+                        response={msg.content}
+                        isStreaming={streamingMsgId === msg.id}
+                        onAction={(event) => {
+                          if (event.type === "continue_conversation" && event.humanFriendlyMessage) {
+                            sendMessage(event.humanFriendlyMessage);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="rounded-2xl rounded-bl-md border-2 border-gray-200 bg-gray-50 px-4 py-2.5 text-base leading-relaxed text-gray-900">
+                        {renderMarkdown(msg.content)}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
 
