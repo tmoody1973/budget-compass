@@ -57,6 +57,7 @@ export const queryBudgetDataTool = createTool({
   outputSchema: z.object({
     data: z.any(),
     source: z.string(),
+    formattedTable: z.string().optional().describe("Pre-formatted markdown table. If present, include this EXACTLY in your response. Do NOT rewrite or reorder it."),
   }),
   execute: async (input) => {
     // Handle cross-city comparison query locally (not in Convex)
