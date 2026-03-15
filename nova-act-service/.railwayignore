@@ -1,0 +1,16 @@
+../
+node_modules
+.next
+src
+public
+convex
+sonic-server
+data
+scripts
+docs
+*.tsx
+*.jsx
+package.json
+package-lock.json
+tsconfig.json
+next.config.*
