@@ -55,7 +55,7 @@ export function AskMode() {
         <CopilotChat
           labels={{
             title: "Budget Compass",
-            initial: "Ask anything about Milwaukee's $1.4B city budget.",
+            initial: "Ask anything about Milwaukee's $2.07B city budget.",
             placeholder: "e.g., How much do we spend on police?",
           }}
           className="copilot-chat-mke h-full"

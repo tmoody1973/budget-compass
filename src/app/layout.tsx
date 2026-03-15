@@ -26,7 +26,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "MKE Budget Compass",
   description:
-    "AI-powered civic intelligence for Milwaukee's $1.4B budget",
+    "AI-powered civic intelligence for Milwaukee's $2.07B budget",
   openGraph: {
     title: "MKE Budget Compass",
     description:

@@ -33,7 +33,7 @@ const FEATURE_CARDS = [
     icon: "\ud83d\udcac",
     color: "bg-green-200",
     expandedContent:
-      "Ask anything about Milwaukee's $1.7 billion budget. Our query router sends your question to the right specialist -- Q&A, analyst, simulator, or visual agent. Every answer comes from verified budget data, never estimated.",
+      "Ask anything about Milwaukee's $2.07 billion budget. Our query router sends your question to the right specialist -- Q&A, analyst, simulator, or visual agent. Every answer comes from verified budget data, never estimated.",
   },
   {
     id: 3,
@@ -191,7 +191,7 @@ export function Landing() {
             </h1>
 
             <p className="text-lg text-gray-600 font-medium border-l-4 border-black pl-4 mb-8">
-              Milwaukee spends $1.7 billion a year. Enter your address and see
+              Milwaukee spends $2.07 billion a year. Enter your address and see
               your personal tax receipt -- every department, every dollar,
               powered by 8 Amazon Nova AI agents.
             </p>

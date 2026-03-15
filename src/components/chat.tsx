@@ -148,7 +148,7 @@ export function Chat({ className }: { className?: string }) {
               MKE Budget Compass
             </h2>
             <p className="mt-2 max-w-md text-sm text-gray-600">
-              Ask anything about Milwaukee&apos;s $1.4B city budget. I&apos;ll
+              Ask anything about Milwaukee&apos;s $2.07B city budget. I&apos;ll
               look up the real numbers and show you charts.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
