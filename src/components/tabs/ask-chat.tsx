@@ -303,19 +303,13 @@ export function AskChat() {
 
     try {
       // Call Railway directly (no Vercel proxy) to avoid function timeout on large PDFs
-      const serviceUrl = process.env.NEXT_PUBLIC_NOVA_ACT_SERVICE_URL ?? "";
-      const analyzeUrl = serviceUrl
-        ? `${serviceUrl}/analyze`
-        : "/api/find-budget"; // fallback to proxy
+      const serviceUrl = process.env.NEXT_PUBLIC_NOVA_ACT_SERVICE_URL
+        || "https://nova-act-budget-finder-production.up.railway.app";
 
-      const res = await fetch(analyzeUrl, {
+      const res = await fetch(`${serviceUrl}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          serviceUrl
-            ? { url, city_hint: title }
-            : { action: "analyze", url, city_hint: title }
-        ),
+        body: JSON.stringify({ url, city_hint: title }),
       });
 
       const data = await res.json();
