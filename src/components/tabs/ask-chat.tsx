@@ -296,18 +296,16 @@ export function AskChat() {
     }
   }, [searchCity]);
 
-  /* Analyze a PDF from a URL (Nova Act found it) */
+  /* Analyze a PDF from a URL — routes through Railway (no Vercel timeout) */
   const handleAnalyzeUrl = useCallback(async (url: string, title: string) => {
     setIsUploading(true);
     setUploadError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("url", url);
-
-      const res = await fetch("/api/analyze-budget", {
+      const res = await fetch("/api/find-budget", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "analyze", url, city_hint: title }),
       });
 
       const data = await res.json();
