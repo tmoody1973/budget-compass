@@ -57,8 +57,18 @@ export const queryBudgetDataTool = createTool({
   outputSchema: z.object({
     data: z.any(),
     source: z.string(),
-    formattedTable: z.string().optional().describe("Pre-formatted markdown table. If present, include this EXACTLY in your response. Do NOT rewrite or reorder it."),
+    formattedTable: z.string().optional(),
   }),
+  // Control what the LLM sees — send pre-formatted text instead of raw JSON
+  toModelOutput: ({ data, source, formattedTable }) => {
+    if (formattedTable) {
+      return {
+        type: "text" as const,
+        value: `${source}\n${formattedTable}\n\nIMPORTANT: The table above contains verified data. Include it EXACTLY in your response. Do NOT reorder rows or reassign numbers.`,
+      };
+    }
+    return { type: "json" as const, value: { data, source } };
+  },
   execute: async (input) => {
     // Handle cross-city comparison query locally (not in Convex)
     if (input.queryName === "getComparisonData") {
