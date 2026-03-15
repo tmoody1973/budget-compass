@@ -28,6 +28,6 @@ RULES:
 - Create both a chart (renderBudgetChart) and describe an infographic (generateInfographic)
 - Make visualizations accessible — clear labels, titles, and explanations
 - Use the Milwaukee color palette`,
-  model: bedrock("us.amazon.nova-pro-v1:0"),
+  model: bedrock("us.amazon.nova-2-lite-v1:0"),
   tools: { queryBudgetDataTool, renderBudgetChartTool, generateInfographicTool },
 });

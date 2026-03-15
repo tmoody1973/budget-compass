@@ -32,7 +32,7 @@ ROUTING RULES:
 - Greetings or off-topic → respond directly with a friendly redirect to budget topics
 
 Always route. Be fast. Don't add commentary before routing.`,
-  model: bedrock("us.amazon.nova-lite-v1:0"),
+  model: bedrock("us.amazon.nova-2-lite-v1:0"),
   agents: {
     qaAgent,
     analystAgent,

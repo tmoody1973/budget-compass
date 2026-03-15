@@ -7,22 +7,16 @@ import { TaxReceipt } from "@/components/tabs/tax-receipt";
 import { ExploreBudgets } from "@/components/tabs/explore-budgets";
 import { BudgetSimulator } from "@/components/tabs/budget-simulator";
 import { AskChat } from "@/components/tabs/ask-chat";
-import { VoicePanel } from "@/components/voice-panel";
+import { Budget101 } from "@/components/budget-101";
 
-type Tab = "receipt" | "explore" | "simulate" | "ask";
+type Tab = "receipt" | "explore" | "simulate" | "ask" | "learn";
 
-const TAB_ICONS: Record<Tab, string> = {
-  receipt: "\ud83e\uddfe",
-  explore: "\ud83d\uddfa\ufe0f",
-  simulate: "\ud83c\udf9b\ufe0f",
-  ask: "\ud83d\udcac",
-};
-
-const TAB_KEYS: { id: Tab; labelKey: string }[] = [
-  { id: "receipt", labelKey: "tab.receipt" },
-  { id: "explore", labelKey: "tab.explore" },
-  { id: "simulate", labelKey: "tab.simulate" },
-  { id: "ask", labelKey: "tab.ask" },
+const TABS: { id: Tab; icon: string; label: string; desc: string }[] = [
+  { id: "receipt", icon: "\ud83e\uddfe", label: "Tax Receipt", desc: "Your breakdown" },
+  { id: "explore", icon: "\ud83d\uddfa\ufe0f", label: "Explore", desc: "Interactive budgets" },
+  { id: "simulate", icon: "\ud83c\udf9b\ufe0f", label: "Remix", desc: "What-if scenarios" },
+  { id: "ask", icon: "\ud83d\udcac", label: "Ask", desc: "Chat with the budget" },
+  { id: "learn", icon: "\ud83c\udf93", label: "Budget 101", desc: "Guided tour" },
 ];
 
 function formatCurrency(value: number): string {
@@ -37,29 +31,29 @@ export function AppShell() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-mke-cream">
       {/* Header */}
-      <header className="border-b-2 border-gray-900 bg-white px-4 py-3">
+      <header className="border-b-4 border-black bg-mke-blue px-4 py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <button
             onClick={() => setIsLanded(false)}
-            className="font-bold text-xl text-blue-900 hover:opacity-80"
+            className="font-head text-2xl font-black text-white hover:opacity-90"
           >
-            MKE Budget Compass
+            Budget Compass
           </button>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="rounded border border-gray-300 px-2 py-1 text-xs font-medium">
+          <div className="flex items-center gap-3">
+            <span className="border-2 border-white/30 bg-white/10 px-3 py-1.5 text-sm font-bold text-white">
               {persona === "resident" ? "\ud83c\udfe0" : persona === "student" ? "\ud83c\udf93" : "\ud83d\udcf0"} {persona}
             </span>
-            <span className="rounded border border-gray-300 px-2 py-1 text-xs font-medium">
-              {t("common.home")}: {formatCurrency(assessedValue)}
+            <span className="border-2 border-white/30 bg-white/10 px-3 py-1.5 text-sm font-bold text-white">
+              {formatCurrency(assessedValue)}
             </span>
-            <span className="rounded border border-gray-300 px-2 py-1 text-xs font-bold text-blue-900">
-              {t("common.tax")}: ${totalTax.toFixed(0)}/yr
+            <span className="border-2 border-white bg-white px-3 py-1.5 text-sm font-black text-mke-blue">
+              ${totalTax.toFixed(0)}/yr
             </span>
             <button
               onClick={() => setLanguage(language === "en" ? "es" : "en")}
-              className="rounded border-2 border-gray-900 px-2 py-1 text-xs font-bold shadow-[1px_1px_0px_0px_#111] hover:bg-gray-100"
+              className="border-2 border-white bg-transparent px-3 py-1.5 text-sm font-bold text-white hover:bg-white/10"
             >
               {language === "en" ? "ES" : "EN"}
             </button>
@@ -68,20 +62,25 @@ export function AppShell() {
       </header>
 
       {/* Tab bar */}
-      <nav className="border-b-2 border-gray-900 bg-white">
+      <nav className="border-b-4 border-black bg-white">
         <div className="mx-auto flex max-w-6xl">
-          {TAB_KEYS.map((tab) => (
+          {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 border-r border-gray-200 px-4 py-3 text-center text-sm font-bold transition-colors last:border-r-0 ${
+              className={`flex-1 border-r-2 border-black px-4 py-3 text-center transition-colors last:border-r-0 ${
                 activeTab === tab.id
-                  ? "bg-blue-900 text-white"
+                  ? "bg-mke-dark text-white"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
-              <span className="mr-1">{TAB_ICONS[tab.id]}</span>
-              {t(tab.labelKey)}
+              <span className="text-lg">{tab.icon}</span>
+              <span className="ml-2 text-base font-black">{tab.label}</span>
+              <span className={`ml-1 hidden text-sm sm:inline ${
+                activeTab === tab.id ? "text-white/70" : "text-gray-400"
+              }`}>
+                {tab.desc}
+              </span>
             </button>
           ))}
         </div>
@@ -89,28 +88,26 @@ export function AppShell() {
 
       {/* Tab content */}
       <main className="flex-1">
-        <div className="mx-auto max-w-6xl p-4">
+        <div className="mx-auto max-w-6xl p-4 sm:p-6">
           {activeTab === "receipt" && <TaxReceipt />}
           {activeTab === "explore" && <ExploreBudgets />}
           {activeTab === "simulate" && <BudgetSimulator />}
           {activeTab === "ask" && <AskChat />}
+          {activeTab === "learn" && <Budget101 />}
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white py-3 text-center text-xs text-gray-400">
+      <footer className="border-t-4 border-black bg-mke-dark py-4 text-center text-sm text-white/60">
         {t("common.footer")}{" "}
-        &middot;{" "}
+        &middot; Powered by Amazon Nova 2 Lite on Bedrock &middot;{" "}
         <a
           href="/methodology"
-          className="text-blue-600 hover:text-blue-800 hover:underline"
+          className="text-white/80 hover:text-white hover:underline"
         >
           {t("common.dataSource")} &rarr;
         </a>
       </footer>
-
-      {/* Voice interaction panel — floats independently */}
-      <VoicePanel />
     </div>
   );
 }

@@ -53,7 +53,7 @@ Respond in JSON format:
 }`;
 
     const command = new InvokeModelCommand({
-      modelId: "us.amazon.nova-pro-v1:0",
+      modelId: "us.amazon.nova-2-lite-v1:0",
       contentType: "application/json",
       accept: "application/json",
       body: JSON.stringify({

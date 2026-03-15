@@ -1,0 +1,94 @@
+{
+  "city": "Madison",
+  "state": "WI",
+  "fiscal_year": 2025,
+  "population": 269840,
+  "total_budget": 431700000,
+  "total_revenue": null,
+  "tax_rate_per_1000": null,
+  "property_tax_levy": 318100000,
+  "departments": [
+    {
+      "name": "Police",
+      "category": "public_safety",
+      "budget": 96200000,
+      "percent_of_total": 22.34
+    },
+    {
+      "name": "Fire",
+      "category": "public_safety",
+      "budget": 74900000,
+      "percent_of_total": 17.39
+    },
+    {
+      "name": "Debt Service",
+      "category": "debt_service",
+      "budget": 68100000,
+      "percent_of_total": 15.81
+    },
+    {
+      "name": "Public Works",
+      "category": "infrastructure",
+      "budget": 52200000,
+      "percent_of_total": 12.11
+    },
+    {
+      "name": "Other",
+      "category": "other",
+      "budget": 47300000,
+      "percent_of_total": 10.98
+    },
+    {
+      "name": "Planning & Development",
+      "category": "community_services",
+      "budget": 30400000,
+      "percent_of_total": 7.05
+    },
+    {
+      "name": "Transportation",
+      "category": "transit",
+      "budget": 29600000,
+      "percent_of_total": 6.87
+    },
+    {
+      "name": "Library",
+      "category": "community_services",
+      "budget": 22200000,
+      "percent_of_total": 5.15
+    },
+    {
+      "name": "Public Health",
+      "category": "health_human_services",
+      "budget": 10800000,
+      "percent_of_total": 2.51
+    }
+  ],
+  "revenue_sources": [
+    {
+      "source": "Property Taxes",
+      "amount": 318100000
+    },
+    {
+      "source": "Intergovernmental Aid (State Aid)",
+      "amount": 49600000
+    },
+    {
+      "source": "Fines & Other",
+      "amount": 22200000
+    },
+    {
+      "source": "Charges for Services",
+      "amount": 18100000
+    },
+    {
+      "source": "City Agency PILOTs",
+      "amount": 15200000
+    },
+    {
+      "source": "Licenses & Permits",
+      "amount": 8500000
+    }
+  ],
+  "extracted_from": "City of Madison 2025 Mayor's Budget Brief",
+  "extraction_notes": "Budget figures reflect proposed general fund expenditures and revenue sources. Property tax levy assumes passage of the $22M referendum. Capital budget details excluded from total budget calculation. Revenue sources include state aid and service charges."
+}

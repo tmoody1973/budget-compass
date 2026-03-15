@@ -4,8 +4,6 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import ReactECharts from "echarts-for-react";
 import { AnimatePresence } from "framer-motion";
 import { useBudget } from "@/contexts/budget-context";
-import { SonicClient, type SonicState } from "@/lib/sonic-client";
-import { SonicVisualizer } from "../sonic-visualizer";
 import { ExpandableCard } from "../expandable-card";
 import taxRatesData from "../../../data/tax-rates-2026.json";
 
@@ -369,56 +367,6 @@ export function TaxReceipt() {
   const [storyText, setStoryText] = useState<string>("");
   const [briefingState, setBriefingState] = useState<"idle" | "loading" | "playing">("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const sonicClientRef = useRef<SonicClient | null>(null);
-  const [taxTalkState, setTaxTalkState] = useState<SonicState>("idle");
-  const [taxTalkAmplitude, setTaxTalkAmplitude] = useState(0);
-  const [talkError, setTalkError] = useState<string | null>(null);
-  const SONIC_URL = process.env.NEXT_PUBLIC_SONIC_URL ?? "http://localhost:3001";
-
-  const handleTalkAboutTaxes = useCallback(async () => {
-    if (taxTalkState !== "idle") {
-      sonicClientRef.current?.disconnect();
-      sonicClientRef.current = null;
-      setTaxTalkState("idle");
-      setTalkError(null);
-      return;
-    }
-
-    setTalkError(null);
-    const client = new SonicClient({
-      sonicUrl: SONIC_URL,
-      persona: persona || "citizen",
-      assessedValue,
-      totalTax,
-      jurisdictions: jurisdictions.map((j: any) => ({
-        shortName: j.shortName,
-        yourShare: j.yourShare,
-        pct: j.pct,
-        rate: j.rate,
-      })),
-      onStateChange: setTaxTalkState,
-      onTranscript: () => {},
-      onToolUse: () => {},
-      onAmplitude: setTaxTalkAmplitude,
-      onError: (msg) => {
-        setTaxTalkState("idle");
-        setTalkError("Voice server unavailable. Use Brief me for an AI-narrated summary.");
-      },
-    });
-
-    sonicClientRef.current = client;
-    try {
-      await client.connect();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("Permission") || msg.includes("NotAllowed") || msg.includes("getUserMedia")) {
-        setTalkError("Microphone access denied. Please allow mic access and try again.");
-      } else {
-        setTalkError("Voice server unavailable. Use Brief me for an AI-narrated summary.");
-      }
-    }
-  }, [taxTalkState, SONIC_URL, persona, assessedValue, totalTax, jurisdictions]);
-
   const handleBriefMe = useCallback(async () => {
     // Toggle off if playing
     if (briefingState === "playing") {
@@ -429,7 +377,6 @@ export function TaxReceipt() {
     }
 
     setBriefingState("loading");
-    setTalkError(null);
 
     try {
       // Step 1: Generate NPR-quality script via Nova Pro
@@ -479,7 +426,6 @@ export function TaxReceipt() {
       setBriefingState("playing");
     } catch {
       setBriefingState("idle");
-      setTalkError("Briefing unavailable. Check your connection.");
     }
   }, [briefingState, assessedValue, totalTax, persona, jurisdictions, storyText]);
 
@@ -487,7 +433,6 @@ export function TaxReceipt() {
   useEffect(() => {
     return () => {
       audioRef.current?.pause();
-      sonicClientRef.current?.disconnect();
     };
   }, []);
 
@@ -580,21 +525,6 @@ export function TaxReceipt() {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={handleTalkAboutTaxes}
-                className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20"
-              >
-                {taxTalkState !== "idle" ? (
-                  <>
-                    <span className="inline-block h-2 w-2 rounded-full bg-green-400" />
-                    Live &mdash; tap to end
-                  </>
-                ) : (
-                  <>
-                    <span className="text-sm">{"\ud83c\udf99\ufe0f"}</span> Talk about my taxes
-                  </>
-                )}
-              </button>
-              <button
                 onClick={handleBriefMe}
                 disabled={briefingState === "loading"}
                 className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/20 disabled:opacity-50"
@@ -624,18 +554,6 @@ export function TaxReceipt() {
               </div>
             </div>
           </div>
-          {/* Voice error toast */}
-          {talkError && (
-            <div className="mt-2 flex items-center justify-between rounded-lg bg-amber-900/80 px-3 py-2">
-              <span className="text-[11px] text-amber-200">{talkError}</span>
-              <button
-                onClick={() => setTalkError(null)}
-                className="ml-2 text-xs text-amber-400 hover:text-white"
-              >
-                {"\u2715"}
-              </button>
-            </div>
-          )}
         </div>
 
         {/* ---- Stacked Bar (2 col) ---- */}

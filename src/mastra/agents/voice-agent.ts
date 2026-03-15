@@ -26,7 +26,7 @@ SCRIPT WRITING RULES:
 - Keep short briefings to ~100 words, medium to ~250 words, long to ~500 words
 
 ALWAYS include keyFacts array with the most important data points for visual display alongside the audio.`,
-  model: bedrock("us.amazon.nova-pro-v1:0"),
+  model: bedrock("us.amazon.nova-2-lite-v1:0"),
   tools: {
     queryBudgetDataTool,
     generateVoiceBriefingTool,

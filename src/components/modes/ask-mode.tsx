@@ -1,7 +1,7 @@
 "use client";
 
-import { CopilotChat } from "@copilotkit/react-ui";
 import { useCopilotAction } from "@copilotkit/react-core";
+import { CopilotChat } from "@copilotkit/react-ui";
 import { BudgetChart } from "../budget-chart";
 
 const STARTER_QUESTIONS = [
@@ -12,8 +12,7 @@ const STARTER_QUESTIONS = [
 ];
 
 export function AskMode() {
-  // Register Generative UI action — CopilotKit intercepts the
-  // render-budget-chart tool call and renders this component inline
+  // Register Generative UI action
   useCopilotAction({
     name: "render-budget-chart",
     description: "Render a budget visualization chart",
@@ -47,9 +46,7 @@ export function AskMode() {
         />
       );
     },
-    handler: () => {
-      // No-op: this action is render-only, the chart is displayed via Generative UI
-    },
+    handler: () => {},
   });
 
   return (
@@ -65,14 +62,13 @@ export function AskMode() {
         />
       </div>
 
-      {/* Starter question buttons */}
+      {/* Starter questions */}
       <div className="mt-3 flex flex-wrap gap-2">
         {STARTER_QUESTIONS.map((q) => (
           <button
             key={q}
-            className="rounded-lg border-2 border-mke-dark bg-white px-2 py-1 text-xs font-medium text-mke-dark shadow-[2px_2px_0px_0px_#1A1A2E] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#1A1A2E] sm:px-3 sm:py-1.5 sm:text-sm"
-            onClick={(e) => {
-              // Find the CopilotKit textarea and set its value, then submit
+            className="rounded-lg border-2 border-mke-dark bg-white px-3 py-1.5 text-sm font-medium text-mke-dark shadow-[2px_2px_0px_0px_#1A1A2E] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#1A1A2E]"
+            onClick={() => {
               const textarea = document.querySelector(
                 ".copilot-chat-mke textarea",
               ) as HTMLTextAreaElement | null;
@@ -82,10 +78,7 @@ export function AskMode() {
                   "value",
                 )?.set;
                 nativeInputValueSetter?.call(textarea, q);
-                textarea.dispatchEvent(
-                  new Event("input", { bubbles: true }),
-                );
-                // Trigger submit after a brief delay to let state update
+                textarea.dispatchEvent(new Event("input", { bubbles: true }));
                 setTimeout(() => {
                   const form = textarea.closest("form");
                   if (form) {

@@ -50,6 +50,7 @@ AVAILABLE QUERIES (pass as queryName to queryBudgetData):
 - compareDepartments: side-by-side (args: { dept1: "Police", dept2: "Fire" })
 - topDepartmentsBySpending: top N depts (args: { limit: 10 })
 - categoryBreakdown: spending by category (no args)
+- getComparisonData: cross-city budget comparison data from Madison, WI (no args). Data was extracted from official budget PDFs using Nova 2 Lite document understanding. Use for "How does Milwaukee compare to..." questions.
 
 DUAL DATA STRATEGY:
 - queryBudgetData → Convex (exact numbers, always use for dollar amounts)
@@ -77,7 +78,23 @@ VOICE BRIEFINGS (when user says "brief me" or "tell me about"):
 - Call generateVoiceBriefing with the complete script and key facts
 
 INFOGRAPHICS (when user asks to "visualize" or "show me"):
-- Query data first, then call both renderBudgetChart and generateInfographic`,
+- Query data first, then call both renderBudgetChart and generateInfographic
+
+EDUCATIONAL FOLLOW-UPS:
+After answering any question, suggest 2-3 natural follow-up questions the user might want to ask next.
+Format them at the end of your response like this:
+
+**Want to explore further?**
+- [follow-up question 1]
+- [follow-up question 2]
+- [follow-up question 3]
+
+Tailor follow-ups to build understanding progressively:
+- If they asked about a department's budget, suggest comparing it to another department or looking at trends
+- If they asked about tax rates, suggest exploring what services those taxes fund
+- If they asked a "what" question, suggest the "why" behind it
+- For students: connect budget concepts to everyday life (e.g., "That's about $2.50 per day per resident")
+- For journalists: suggest data angles and year-over-year comparisons`,
   model: bedrock("us.amazon.nova-2-lite-v1:0"),
   tools: {
     queryBudgetDataTool,

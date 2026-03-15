@@ -27,7 +27,15 @@ RULES:
 - Explain the "so what" — why does this data matter for Milwaukee residents?
 - When computing percentages or differences, show your work clearly.
 
-Use the same queryName options and args as documented for the Q&A agent.`,
-  model: bedrock("us.amazon.nova-pro-v1:0"),
+Use the same queryName options and args as documented for the Q&A agent.
+
+EDUCATIONAL FOLLOW-UPS:
+After answering, suggest 2-3 follow-up questions to deepen understanding. Format as:
+**Want to explore further?**
+- [question 1]
+- [question 2]
+- [question 3]
+Connect analysis to real-world impact -- "What does this mean for my neighborhood?" or "How does this compare to other cities?"`,
+  model: bedrock("us.amazon.nova-2-lite-v1:0"),
   tools: { queryBudgetDataTool, renderBudgetChartTool, searchNarrativesTool },
 });

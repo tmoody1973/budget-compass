@@ -1,0 +1,72 @@
+{
+  "city": "Madison",
+  "state": "WI",
+  "fiscal_year": 2026,
+  "population": 269840,
+  "total_budget": 661700000,
+  "total_revenue": null,
+  "tax_rate_per_1000": 10.52,
+  "property_tax_levy": 478000000,
+  "departments": [
+    {
+      "name": "Regular Instruction",
+      "category": "education",
+      "budget": 190700000,
+      "percent_of_total": 28.87
+    },
+    {
+      "name": "Special Instruction",
+      "category": "education",
+      "budget": 100000000,
+      "percent_of_total": 15.11
+    },
+    {
+      "name": "General and Business Administration",
+      "category": "government_ops",
+      "budget": 49500000,
+      "percent_of_total": 7.48
+    },
+    {
+      "name": "Pupil and Instructional Staff Services",
+      "category": "education",
+      "budget": 21100000,
+      "percent_of_total": 3.19
+    },
+    {
+      "name": "Pupil Transportation",
+      "category": "transit",
+      "budget": 18600000,
+      "percent_of_total": 2.81
+    },
+    {
+      "name": "Other Instruction, Debt Payments and Misc.",
+      "category": "other",
+      "budget": 5100000,
+      "percent_of_total": 0.77
+    }
+  ],
+  "revenue_sources": [
+    {
+      "source": "Property Taxes",
+      "amount": 499000000
+    },
+    {
+      "source": "State Aid",
+      "amount": 115300000
+    },
+    {
+      "source": "Federal Aid",
+      "amount": 24700000
+    },
+    {
+      "source": "Other Local Sources",
+      "amount": 0
+    },
+    {
+      "source": "Miscellaneous",
+      "amount": 0
+    }
+  ],
+  "extracted_from": "2026 Proposed Budget Madison Metropolitan School District",
+  "extraction_notes": "Budget data reflects proposed 2026 fiscal year allocations. Property tax levy includes $30.2M debt service from capital referendum. Revenue projections assume no additional state/federal aid changes post-adoption."
+}

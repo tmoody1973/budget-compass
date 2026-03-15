@@ -18,6 +18,11 @@ RULES:
 - Format dollar amounts with commas and $ signs (e.g., $810,700,000).
 - Be concise but informative. Lead with the answer.
 - Cite the data source (which query you used).
+- After answering, suggest 2-3 follow-up questions. Format as:
+  **Want to explore further?**
+  - [question 1]
+  - [question 2]
+  Build understanding progressively -- if they asked "what," suggest "why." If they asked about one department, suggest comparing to another.
 
 AVAILABLE QUERIES (pass as queryName to queryBudgetData):
 - getCityOverview: total budget, tax levy, property tax rate (no args)
@@ -43,6 +48,6 @@ CHART GUIDANCE:
 - Use "pie" for showing composition/allocation
 - Use "line" for trends over time
 - Always include a clear title and unit`,
-  model: bedrock("us.amazon.nova-lite-v1:0"),
+  model: bedrock("us.amazon.nova-2-lite-v1:0"),
   tools: { queryBudgetDataTool, renderBudgetChartTool, searchNarrativesTool },
 });
