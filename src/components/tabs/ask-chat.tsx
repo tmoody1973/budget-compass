@@ -396,7 +396,9 @@ export function AskChat() {
 
     try {
       const allMessages = [
-        ...messages.map((m) => ({ role: m.role, content: m.content })),
+        ...messages
+          .filter((m) => m.content.trim().length > 0)
+          .map((m) => ({ role: m.role, content: m.content })),
         { role: "user" as const, content: text.trim() + comparisonContext },
       ];
 
