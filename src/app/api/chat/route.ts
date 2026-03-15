@@ -22,7 +22,6 @@ export async function POST(req: NextRequest) {
 
           let text = value;
 
-          // Strip thinking tags
           if (text.includes("<thinking>")) insideThinking = true;
           if (insideThinking) {
             if (text.includes("</thinking>")) {
@@ -34,11 +33,6 @@ export async function POST(req: NextRequest) {
           }
           text = text.replace(/<thinking>[\s\S]*?<\/thinking>/g, "");
           text = text.replace(/<\/?thinking>/g, "");
-
-          // Strip code fences that Nova might wrap around OpenUI Lang
-          text = text.replace(/```openui-lang\n?/g, "");
-          text = text.replace(/```openui\n?/g, "");
-          text = text.replace(/```\n?$/g, "");
 
           if (text) {
             controller.enqueue(encoder.encode(text));

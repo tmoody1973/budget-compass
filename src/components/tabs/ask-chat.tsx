@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Renderer } from "@openuidev/react-lang";
-import { openuiChatLibrary } from "@openuidev/react-ui/genui-lib";
-import "@openuidev/react-ui/components.css";
-import "@openuidev/react-ui/styles/index.css";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useBudget } from "@/contexts/budget-context";
 import madisonData from "../../../data/comparison/madison.json";
 import madisonSchoolsData from "../../../data/comparison/madison-schools.json";
@@ -609,23 +607,72 @@ export function AskChat() {
                     {msg.content}
                   </div>
                 ) : (
-                  <div className="w-full max-w-[90%]">
-                    {msg.content.includes("root =") || msg.content.includes("= Card(") ? (
-                      <Renderer
-                        library={openuiChatLibrary}
-                        response={msg.content}
-                        isStreaming={streamingMsgId === msg.id}
-                        onAction={(event) => {
-                          if (event.type === "continue_conversation" && event.humanFriendlyMessage) {
-                            sendMessage(event.humanFriendlyMessage);
+                  <div className="w-full max-w-[90%] rounded-2xl rounded-bl-md border-2 border-gray-200 bg-gray-50 px-4 py-3 text-base leading-relaxed text-gray-900">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h2: ({ children }) => (
+                          <h2 className="mt-3 mb-2 text-lg font-black text-mke-dark">{children}</h2>
+                        ),
+                        h3: ({ children }) => (
+                          <h3 className="mt-2 mb-1 text-base font-bold text-mke-dark">{children}</h3>
+                        ),
+                        strong: ({ children }) => (
+                          <strong className="font-bold text-mke-blue">{children}</strong>
+                        ),
+                        p: ({ children }) => (
+                          <p className="mb-2 last:mb-0">{children}</p>
+                        ),
+                        ul: ({ children }) => (
+                          <ul className="mb-2 ml-1 space-y-1">{children}</ul>
+                        ),
+                        li: ({ children }) => {
+                          const text = String(children);
+                          // Detect follow-up suggestions and render as clickable buttons
+                          if (text.startsWith("[") && text.endsWith("]")) {
+                            const question = text.slice(1, -1);
+                            return (
+                              <li className="list-none">
+                                <button
+                                  onClick={() => sendMessage(question)}
+                                  className="w-full text-left border-2 border-black bg-white px-3 py-2 text-sm font-medium shadow-[2px_2px_0px_0px_#111] transition-all hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#111]"
+                                >
+                                  {question}
+                                </button>
+                              </li>
+                            );
                           }
-                        }}
-                      />
-                    ) : (
-                      <div className="rounded-2xl rounded-bl-md border-2 border-gray-200 bg-gray-50 px-4 py-2.5 text-base leading-relaxed text-gray-900">
-                        {renderMarkdown(msg.content)}
-                      </div>
-                    )}
+                          return <li className="ml-4 list-disc">{children}</li>;
+                        },
+                        table: ({ children }) => (
+                          <div className="my-3 overflow-x-auto rounded border-2 border-black shadow-[3px_3px_0px_0px_#111]">
+                            <table className="w-full text-sm">{children}</table>
+                          </div>
+                        ),
+                        thead: ({ children }) => (
+                          <thead className="bg-mke-dark text-white">{children}</thead>
+                        ),
+                        th: ({ children }) => (
+                          <th className="px-3 py-2 text-left font-bold">{children}</th>
+                        ),
+                        td: ({ children }) => (
+                          <td className="border-t border-gray-200 px-3 py-2">{children}</td>
+                        ),
+                        tr: ({ children }) => (
+                          <tr className="even:bg-gray-50">{children}</tr>
+                        ),
+                        em: ({ children }) => (
+                          <em className="text-sm text-gray-500 not-italic">{children}</em>
+                        ),
+                        a: ({ href, children }) => (
+                          <a href={href} target="_blank" rel="noopener noreferrer" className="font-medium text-mke-blue underline hover:text-blue-800">
+                            {children}
+                          </a>
+                        ),
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
                   </div>
                 )}
               </div>

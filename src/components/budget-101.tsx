@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Renderer } from "@openuidev/react-lang";
-import { openuiChatLibrary } from "@openuidev/react-ui/genui-lib";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useBudget } from "@/contexts/budget-context";
 
 const STEPS = [
@@ -180,27 +180,37 @@ export function Budget101() {
               <span className="text-base font-medium">Nova is looking this up...</span>
             </div>
           ) : (
-            <div className="max-w-none">
-              {(responses[currentStep] ?? "").includes("root =") ? (
-                <Renderer
-                  library={openuiChatLibrary}
-                  response={responses[currentStep] ?? ""}
-                  isStreaming={isLoading}
-                />
-              ) : (
-                <div className="prose prose-base text-gray-800 leading-relaxed">
-                  {(responses[currentStep] ?? "").split("\n").map((line, i) => {
-                    if (!line.trim()) return <br key={i} />;
-                    if (line.startsWith("**") && line.endsWith("**")) {
-                      return <p key={i} className="font-black text-mke-dark">{line.replace(/\*\*/g, "")}</p>;
-                    }
-                    if (line.startsWith("- ") || line.startsWith("* ")) {
-                      return <p key={i} className="ml-4 before:content-['•_'] before:font-bold">{line.slice(2)}</p>;
-                    }
-                    return <p key={i}>{line}</p>;
-                  })}
-                </div>
-              )}
+            <div className="prose prose-base max-w-none text-gray-800 leading-relaxed">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h2: ({ children }) => (
+                    <h2 className="mt-3 mb-2 text-lg font-black text-mke-dark">{children}</h2>
+                  ),
+                  strong: ({ children }) => (
+                    <strong className="font-bold text-mke-blue">{children}</strong>
+                  ),
+                  table: ({ children }) => (
+                    <div className="my-3 overflow-x-auto rounded border-2 border-black shadow-[3px_3px_0px_0px_#111]">
+                      <table className="w-full text-sm">{children}</table>
+                    </div>
+                  ),
+                  thead: ({ children }) => (
+                    <thead className="bg-mke-dark text-white">{children}</thead>
+                  ),
+                  th: ({ children }) => (
+                    <th className="px-3 py-2 text-left font-bold">{children}</th>
+                  ),
+                  td: ({ children }) => (
+                    <td className="border-t border-gray-200 px-3 py-2">{children}</td>
+                  ),
+                  tr: ({ children }) => (
+                    <tr className="even:bg-gray-50">{children}</tr>
+                  ),
+                }}
+              >
+                {responses[currentStep] ?? ""}
+              </ReactMarkdown>
             </div>
           )}
         </div>
