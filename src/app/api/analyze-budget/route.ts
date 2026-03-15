@@ -9,7 +9,9 @@ const client = new BedrockRuntimeClient({
 });
 
 const MODEL_ID = "us.amazon.nova-2-lite-v1:0";
-const MAX_PDF_BYTES = 4.5 * 1024 * 1024; // 4.5 MB
+// Nova models exempt PDF/DOCX from the standard 4.5 MB limit
+// Set a practical limit to avoid timeouts on very large documents
+const MAX_PDF_BYTES = 25 * 1024 * 1024; // 25 MB
 
 const EXTRACTION_PROMPT = `You are a municipal budget analyst. Extract structured budget data from this document.
 
