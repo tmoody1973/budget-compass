@@ -164,8 +164,13 @@ export async function POST(req: Request) {
         );
       }
 
+      // Check content-type (allow pdf, octet-stream, and some government
+      // sites that serve PDFs as text/html through redirect chains)
       const contentType = pdfRes.headers.get("content-type") ?? "";
-      if (!contentType.includes("pdf") && !contentType.includes("octet-stream")) {
+      const fetchedUrl = pdfRes.url; // Final URL after redirects
+      const isPdfContent = contentType.includes("pdf") || contentType.includes("octet-stream");
+      const isPdfUrl = fetchedUrl.toLowerCase().endsWith(".pdf") || pdfUrl.toLowerCase().includes("pdf");
+      if (!isPdfContent && !isPdfUrl) {
         return NextResponse.json(
           { error: `URL does not point to a PDF (content-type: ${contentType})` },
           { status: 422 }
