@@ -61,6 +61,22 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
 
   const { user, isSignedIn } = useUser();
   const convex = useConvex();
+  const [wasSignedIn, setWasSignedIn] = useState(false);
+
+  // Reset to landing page on sign out
+  useEffect(() => {
+    if (isSignedIn) {
+      setWasSignedIn(true);
+    } else if (wasSignedIn && !isSignedIn) {
+      // User just signed out
+      setIsLanded(false);
+      setAssessedValue(166000);
+      setPropertyDetails({});
+      setPersona("resident");
+      setProfileLoaded(false);
+      setWasSignedIn(false);
+    }
+  }, [isSignedIn, wasSignedIn]);
 
   // Load saved profile on sign-in
   useEffect(() => {
