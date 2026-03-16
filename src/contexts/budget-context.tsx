@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useConvex } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { anyApi } from "convex/server";
 import taxRatesData from "../../data/tax-rates-2026.json";
 
 type Persona = "resident" | "student" | "journalist";
@@ -68,7 +68,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
 
     async function loadProfile() {
       try {
-        const profile = await convex.query(api.userProfiles.getProfile, {
+        const profile = await convex.query(anyApi["userProfiles"]["getProfile"], {
           clerkId: user!.id,
         });
 
@@ -99,7 +99,7 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
     if (!isSignedIn || !user?.id) return;
 
     try {
-      await convex.mutation(api.userProfiles.saveProfile, {
+      await convex.mutation(anyApi["userProfiles"]["saveProfile"], {
         clerkId: user.id,
         assessedValue,
         address: propertyDetails.address,

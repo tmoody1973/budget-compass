@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useUser } from "@clerk/nextjs";
+import { useConvex } from "convex/react";
+import { anyApi } from "convex/server";
 import { useBudget } from "@/contexts/budget-context";
 import madisonData from "../../../data/comparison/madison.json";
 import madisonSchoolsData from "../../../data/comparison/madison-schools.json";
@@ -148,14 +151,75 @@ function renderMarkdown(text: string) {
 
 export function AskChat() {
   const { persona, assessedValue, totalTax } = useBudget();
+  const { user } = useUser();
+  const convex = useConvex();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [usedRealApi, setUsedRealApi] = useState(false);
   const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionsLoaded, setSessionsLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load most recent chat session on mount (if signed in)
+  useEffect(() => {
+    if (!user?.id || sessionsLoaded) return;
+    async function loadSession() {
+      try {
+        const sessions = await convex.query(anyApi["chatSessions"]["getSessions"], {
+          clerkId: user!.id,
+        });
+        if (sessions && sessions.length > 0) {
+          const latest = sessions[0];
+          setSessionId(latest._id);
+          setMessages(
+            latest.messages.map((m: any) => ({
+              id: crypto.randomUUID(),
+              role: m.role as "user" | "assistant",
+              content: m.content,
+              timestamp: new Date(m.timestamp),
+            }))
+          );
+        }
+      } catch {
+        // No sessions yet
+      }
+      setSessionsLoaded(true);
+    }
+    loadSession();
+  }, [user?.id, sessionsLoaded, convex]);
+
+  // Save chat after each message exchange (debounced)
+  const saveChat = useCallback(async (msgs: Message[]) => {
+    if (!user?.id || msgs.length === 0) return;
+    const convexMsgs = msgs.map((m) => ({
+      role: m.role,
+      content: m.content,
+      timestamp: m.timestamp.getTime(),
+    }));
+    const title = msgs[0]?.content.slice(0, 50) || "Budget Chat";
+
+    try {
+      if (sessionId) {
+        await convex.mutation(anyApi["chatSessions"]["updateSession"], {
+          id: sessionId,
+          messages: convexMsgs,
+        });
+      } else {
+        const id = await convex.mutation(anyApi["chatSessions"]["saveSession"], {
+          clerkId: user.id,
+          title,
+          messages: convexMsgs,
+        });
+        setSessionId(id);
+      }
+    } catch {
+      // Silent fail
+    }
+  }, [user?.id, sessionId, convex]);
 
   // Comparison budgets state
   const [availableBudgets, setAvailableBudgets] = useState<ComparisonBudget[]>(PRE_LOADED_BUDGETS);
@@ -439,6 +503,8 @@ export function AskChat() {
         );
       }
       setStreamingMsgId(null);
+      // Save chat to Convex after streaming completes
+      setMessages((prev) => { saveChat(prev); return prev; });
     } catch (err) {
       console.error("Chat error:", err);
       const aiMsg: Message = {
@@ -478,6 +544,19 @@ export function AskChat() {
         <span className="border-2 border-black bg-gray-100 px-2 py-0.5 text-sm font-bold text-gray-600">
           {formatCurrency(assessedValue)}
         </span>
+
+        {/* New Chat button */}
+        {messages.length > 0 && (
+          <button
+            onClick={() => {
+              setMessages([]);
+              setSessionId(null);
+            }}
+            className="border-2 border-black bg-yellow-100 px-2 py-0.5 text-sm font-bold shadow-[2px_2px_0px_0px_#111] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#111]"
+          >
+            + New Chat
+          </button>
+        )}
 
         {/* Budget comparison dropdown */}
         <div className="ml-auto flex items-center gap-2">
