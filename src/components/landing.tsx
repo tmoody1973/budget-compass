@@ -127,6 +127,7 @@ export function Landing() {
   };
 
   const handleSelectSuggestion = (property: MpropProperty) => {
+    if (!user) { setShowSignInPrompt(true); setShowSuggestions(false); return; }
     setAssessedValue(property.assessedValue);
     setPropertyDetails({
       address: property.address,
