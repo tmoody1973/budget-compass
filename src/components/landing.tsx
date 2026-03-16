@@ -141,6 +141,7 @@ export function Landing() {
   };
 
   const handleAddressSearch = async () => {
+    if (!user) { setShowSignInPrompt(true); return; }
     if (!addressInput.trim()) return;
     setIsSearching(true);
     setError("");
@@ -166,11 +167,23 @@ export function Landing() {
     setAssessedValue(value);
   };
 
-  const handleGo = () => {
-    if (selectedPreset) {
-      setAssessedValue(selectedPreset);
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+
+  const requireAuth = (action: () => void) => {
+    if (!user) {
+      setShowSignInPrompt(true);
+      return;
     }
-    setIsLanded(true);
+    action();
+  };
+
+  const handleGo = () => {
+    requireAuth(() => {
+      if (selectedPreset) {
+        setAssessedValue(selectedPreset);
+      }
+      setIsLanded(true);
+    });
   };
 
   return (
@@ -336,13 +349,25 @@ export function Landing() {
                 </div>
               </div>
 
+              {/* Sign in prompt */}
+              {showSignInPrompt && !user && (
+                <div className="mb-3 flex items-center justify-between border-2 border-black bg-yellow-100 px-4 py-3">
+                  <span className="text-sm font-bold">Sign in to see your personalized tax breakdown</span>
+                  <SignInButton mode="modal">
+                    <button className="border-2 border-black bg-mke-blue px-3 py-1 text-sm font-bold text-white shadow-[2px_2px_0px_0px_black]">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                </div>
+              )}
+
               {/* Go button */}
               <Button
                 onClick={handleGo}
                 size="lg"
                 className="w-full bg-black text-white shadow-[4px_4px_0px_0px_#2563eb] text-xl font-black py-4 justify-center"
               >
-                See My Tax Breakdown &rarr;
+                {user ? "See My Tax Breakdown \u2192" : "Sign In & See My Tax Breakdown \u2192"}
               </Button>
             </div>
           </div>
