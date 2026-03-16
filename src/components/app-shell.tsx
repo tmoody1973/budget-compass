@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { UserButton, useUser } from "@clerk/nextjs";
 import { useBudget } from "@/contexts/budget-context";
 import { useTranslation } from "@/lib/i18n";
 import { TaxReceipt } from "@/components/tabs/tax-receipt";
@@ -28,6 +29,7 @@ function formatCurrency(value: number): string {
 export function AppShell() {
   const [activeTab, setActiveTab] = useState<Tab>("receipt");
   const { assessedValue, totalTax, persona, language, setLanguage, setIsLanded } = useBudget();
+  const { user } = useUser();
   const { t } = useTranslation();
 
   return (
@@ -57,6 +59,7 @@ export function AppShell() {
             >
               {language === "en" ? "ES" : "EN"}
             </button>
+            {user && <UserButton />}
           </div>
         </div>
       </header>

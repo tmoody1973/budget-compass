@@ -1,6 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useConvex } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import taxRatesData from "../../data/tax-rates-2026.json";
 
 type Persona = "resident" | "student" | "journalist";
@@ -54,6 +57,68 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>("en");
   const [propertyDetails, setPropertyDetails] = useState<PropertyDetails>({});
   const [isLanded, setIsLanded] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  const { user, isSignedIn } = useUser();
+  const convex = useConvex();
+
+  // Load saved profile on sign-in
+  useEffect(() => {
+    if (!isSignedIn || !user?.id || profileLoaded) return;
+
+    async function loadProfile() {
+      try {
+        const profile = await convex.query(api.userProfiles.getProfile, {
+          clerkId: user!.id,
+        });
+
+        if (profile) {
+          if (profile.assessedValue) setAssessedValue(profile.assessedValue);
+          if (profile.persona) setPersona(profile.persona as Persona);
+          if (profile.address) {
+            setPropertyDetails({
+              address: profile.address,
+              aldermanicDistrict: profile.aldermanicDistrict ?? undefined,
+              policeDistrict: profile.policeDistrict ?? undefined,
+              fireStation: profile.fireStation ?? undefined,
+            });
+            setIsLanded(true);
+          }
+          setProfileLoaded(true);
+        }
+      } catch {
+        // Profile doesn't exist yet, that's fine
+      }
+    }
+
+    loadProfile();
+  }, [isSignedIn, user?.id, profileLoaded, convex]);
+
+  // Save profile when user data changes (debounced)
+  const saveProfile = useCallback(async () => {
+    if (!isSignedIn || !user?.id) return;
+
+    try {
+      await convex.mutation(api.userProfiles.saveProfile, {
+        clerkId: user.id,
+        assessedValue,
+        address: propertyDetails.address,
+        aldermanicDistrict: propertyDetails.aldermanicDistrict,
+        policeDistrict: propertyDetails.policeDistrict,
+        fireStation: propertyDetails.fireStation,
+        persona,
+      });
+    } catch {
+      // Silent fail — don't break the app if save fails
+    }
+  }, [isSignedIn, user?.id, assessedValue, propertyDetails, persona, convex]);
+
+  // Auto-save when important data changes
+  useEffect(() => {
+    if (!isSignedIn || !profileLoaded) return;
+    const timer = setTimeout(saveProfile, 1000);
+    return () => clearTimeout(timer);
+  }, [assessedValue, propertyDetails, persona, isSignedIn, profileLoaded, saveProfile]);
 
   const grossRate = taxRatesData.grossRate;
   const netRate = taxRatesData.netRate;

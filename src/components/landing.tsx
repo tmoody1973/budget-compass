@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { useBudget } from "@/contexts/budget-context";
 import { useTranslation } from "@/lib/i18n";
 import { lookupAddress, searchAddresses, type MpropProperty } from "@/lib/mprop";
@@ -67,6 +68,7 @@ const FEATURE_CARDS = [
 export function Landing() {
   const { setAssessedValue, setPropertyDetails, setPersona, persona, setIsLanded } = useBudget();
   const { t } = useTranslation();
+  const { user } = useUser();
   const [addressInput, setAddressInput] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState("");
@@ -173,6 +175,22 @@ export function Landing() {
 
   return (
     <main className="min-h-screen bg-white">
+      {/* Auth bar */}
+      <div className="flex items-center justify-end gap-3 px-6 py-3 border-b border-gray-200">
+        {user ? (
+          <>
+            <span className="text-sm font-medium text-gray-600">Your data is saved</span>
+            <UserButton />
+          </>
+        ) : (
+          <SignInButton mode="modal">
+            <button className="border-2 border-black bg-mke-blue px-4 py-1.5 text-sm font-bold text-white shadow-[2px_2px_0px_0px_black] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_black]">
+              Sign In
+            </button>
+          </SignInButton>
+        )}
+      </div>
+
       {/* Hero Section */}
       <div className="max-w-6xl mx-auto px-4 py-16 sm:py-20">
         <div className="grid md:grid-cols-2 gap-12 items-center">

@@ -233,4 +233,31 @@ export default defineSchema({
     source: v.string(),
     amount2026: v.number(),
   }).index("by_source", ["source"]),
+
+  // User profiles (linked to Clerk)
+  userProfiles: defineTable({
+    clerkId: v.string(),
+    assessedValue: v.optional(v.number()),
+    address: v.optional(v.string()),
+    aldermanicDistrict: v.optional(v.string()),
+    policeDistrict: v.optional(v.string()),
+    fireStation: v.optional(v.string()),
+    persona: v.optional(v.string()),
+    updatedAt: v.number(),
+  }).index("by_clerk_id", ["clerkId"]),
+
+  // Saved chat sessions
+  chatSessions: defineTable({
+    clerkId: v.string(),
+    title: v.string(),
+    messages: v.array(v.object({
+      role: v.string(),
+      content: v.string(),
+      timestamp: v.number(),
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_clerk_id_updated", ["clerkId", "updatedAt"]),
 });
